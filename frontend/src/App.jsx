@@ -10,6 +10,7 @@ import Register from "./pages/Register.jsx";
 import Workshops from "./pages/Workshops.jsx";
 import WorkshopDetail from "./pages/WorkshopDetail.jsx";
 import CreateWorkshop from "./pages/admin/CreateWorkshop.jsx";
+import WorkshopAttendance from "./pages/admin/WorkshopAttendance.jsx";
 import MyWorkshops from "./pages/student/MyWorkshops.jsx";
 
 function PublicOnlyRoute({ children }) {
@@ -76,6 +77,14 @@ function AppRoutes() {
           element={
             <AdminRoute>
               <CreateWorkshop />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/workshops/:id/attendance"
+          element={
+            <AdminRoute>
+              <WorkshopAttendance />
             </AdminRoute>
           }
         />

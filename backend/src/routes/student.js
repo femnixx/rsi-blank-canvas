@@ -8,7 +8,7 @@ const router = express.Router();
 /**
  * GET /api/student/my-workshops
  * Student Only (requireAuth, requireStudent). Fetch workshops where the
- * authenticated student is enrolled, including material counts.
+ * authenticated student is enrolled, including material counts and attendance status.
  */
 router.get("/my-workshops", requireAuth, requireStudent, async (req, res) => {
   try {
@@ -19,12 +19,15 @@ router.get("/my-workshops", requireAuth, requireStudent, async (req, res) => {
         r.id AS registration_id,
         r.student_nim,
         r.registration_date,
-        COUNT(m.id) AS material_count
+        COUNT(m.id) AS material_count,
+        CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS attended,
+        a.checked_in_at AS attended_at
       FROM workshops w
       JOIN workshop_registrations r ON r.workshop_id = w.id
       LEFT JOIN workshop_materials m ON m.workshop_id = w.id
+      LEFT JOIN workshop_attendance a ON a.workshop_id = w.id AND a.user_id = $1
       WHERE r.user_id = $1
-      GROUP BY w.id, r.id
+      GROUP BY w.id, r.id, a.id, a.checked_in_at
       ORDER BY w.event_date DESC
     `, [req.user.id]);
 

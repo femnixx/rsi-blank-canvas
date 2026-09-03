@@ -16,8 +16,8 @@ export const pool = new Pool({
 /**
  * Initialize all tables if not exists.
  * Extends users with role + nim columns.
- * Drops workshop_registrations for schema migration (workshop_id + user_id unique).
- * Drops workshop_attendance (not needed in this design).
+ * Keeps workshop_registrations with UNIQUE(workshop_id, user_id).
+ * Adds workshop_attendance tied to registration_id for V6 attendance tracking.
  */
 export async function initDb() {
   const query = `
@@ -40,14 +40,22 @@ export async function initDb() {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
-    DROP TABLE IF EXISTS workshop_attendance CASCADE;
-    DROP TABLE IF EXISTS workshop_registrations CASCADE;
-    CREATE TABLE workshop_registrations (
+    CREATE TABLE IF NOT EXISTS workshop_registrations (
       id SERIAL PRIMARY KEY,
       workshop_id INT REFERENCES workshops(id) ON DELETE CASCADE,
       user_id INT REFERENCES users(id) ON DELETE CASCADE,
       student_nim VARCHAR(20) NOT NULL,
       registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(workshop_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS workshop_attendance (
+      id SERIAL PRIMARY KEY,
+      registration_id INT REFERENCES workshop_registrations(id) ON DELETE CASCADE,
+      workshop_id INT REFERENCES workshops(id) ON DELETE CASCADE,
+      user_id INT REFERENCES users(id) ON DELETE CASCADE,
+      checked_in_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(20) DEFAULT 'present',
       UNIQUE(workshop_id, user_id)
     );
 
@@ -60,5 +68,5 @@ export async function initDb() {
     );
   `;
   await pool.query(query);
-  console.log("[db] users, workshops, workshop_registrations, workshop_materials tables ready");
+  console.log("[db] users, workshops, workshop_registrations, workshop_attendance, workshop_materials tables ready");
 }

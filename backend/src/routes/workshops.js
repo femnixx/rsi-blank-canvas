@@ -2,8 +2,39 @@ import express from "express";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireAdmin, requireStudent } from "../middleware/admin.js";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, path.join(__dirname, "..", "..", "uploads"));
+  },
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, unique + ext);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".zip", ".png", ".jpg", ".jpeg"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file type"));
+    }
+  },
+});
 
 /**
  * GET /api/workshops
@@ -132,23 +163,35 @@ router.get("/:id/registrations", requireAuth, async (req, res) => {
 
 /**
  * POST /api/workshops/:id/materials
- * Admin Only (requireAuth, requireAdmin). Add a material resource.
+ * Admin Only (requireAuth, requireAdmin). Add material resources with optional file uploads.
  */
-router.post("/:id/materials", requireAuth, requireAdmin, async (req, res) => {
-  const { title, file_url } = req.body;
+router.post("/:id/materials", requireAuth, requireAdmin, upload.array("files", 10), async (req, res) => {
+  const { title, files: filesJson } = req.body;
 
-  if (!title || !file_url) {
-    return res.status(400).json({ message: "title and file_url are required" });
+  const titles = Array.isArray(title) ? title : [title];
+  const files = req.files || [];
+
+  if (titles.length === 0 && files.length === 0) {
+    return res.status(400).json({ message: "At least one title or file is required" });
   }
 
   try {
-    const result = await pool.query(
-      `INSERT INTO workshop_materials (workshop_id, title, file_url)
-       VALUES ($1, $2, $3)
-       RETURNING id, workshop_id, title, file_url, uploaded_at`,
-      [req.params.id, title, file_url]
-    );
-    return res.status(201).json({ material: result.rows[0] });
+    const rows = [];
+    for (let i = 0; i < Math.max(titles.length, files.length); i++) {
+      const file = files[i];
+      const materialTitle = titles[i] || file?.originalname || "Untitled Material";
+      const file_url = file ? `/uploads/${file.filename}` : null;
+
+      const result = await pool.query(
+        `INSERT INTO workshop_materials (workshop_id, title, file_url)
+         VALUES ($1, $2, $3)
+         RETURNING id, workshop_id, title, file_url, uploaded_at`,
+        [req.params.id, materialTitle, file_url]
+      );
+      rows.push(result.rows[0]);
+    }
+
+    return res.status(201).json({ materials: rows });
   } catch (err) {
     if (err.code === "23507") {
       return res.status(404).json({ message: "Workshop not found" });
@@ -198,6 +241,86 @@ router.get("/:id/materials", requireAuth, async (req, res) => {
 });
 
 /**
+ * POST /api/workshops/:id/attendance
+ * Admin Only (requireAuth, requireAdmin). Mark attendance for a registered student.
+ */
+router.post("/:id/attendance", requireAuth, requireAdmin, async (req, res) => {
+  const { registration_id } = req.body;
+
+  if (!registration_id) {
+    return res.status(400).json({ message: "registration_id is required" });
+  }
+
+  try {
+    const regCheck = await pool.query(
+      "SELECT id, workshop_id, user_id FROM workshop_registrations WHERE id = $1 AND workshop_id = $2",
+      [registration_id, req.params.id]
+    );
+
+    if (regCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Registration not found for this workshop" });
+    }
+
+    const reg = regCheck.rows[0];
+
+    const result = await pool.query(
+      `INSERT INTO workshop_attendance (registration_id, workshop_id, user_id, status)
+       VALUES ($1, $2, $3, 'present')
+       ON CONFLICT (workshop_id, user_id) DO UPDATE SET checked_in_at = CURRENT_TIMESTAMP, status = 'present'
+       RETURNING id, registration_id, workshop_id, user_id, checked_in_at, status`,
+      [reg.id, reg.workshop_id, reg.user_id]
+    );
+
+    return res.status(201).json({ attendance: result.rows[0] });
+  } catch (err) {
+    console.error("[attendance create] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/workshops/:id/attendance
+ * Admin Only. List attendance records for a workshop.
+ */
+router.get("/:id/attendance", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT a.id, a.registration_id, a.workshop_id, a.user_id, a.checked_in_at, a.status,
+              u.email, u.nim
+       FROM workshop_attendance a
+       JOIN users u ON u.id = a.user_id
+       WHERE a.workshop_id = $1
+       ORDER BY a.checked_in_at DESC`,
+      [req.params.id]
+    );
+    return res.json({ attendance: result.rows });
+  } catch (err) {
+    console.error("[attendance list] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * DELETE /api/workshops/:id/attendance/:attendanceId
+ * Admin Only. Remove an attendance record.
+ */
+router.delete("/:id/attendance/:attendanceId", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM workshop_attendance WHERE id = $1 AND workshop_id = $2 RETURNING id",
+      [req.params.attendanceId, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Attendance record not found" });
+    }
+    return res.json({ message: "Attendance record deleted", id: result.rows[0].id });
+  } catch (err) {
+    console.error("[attendance delete] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
  * PUT /api/workshops/:id
  * Admin Only (requireAuth, requireAdmin). Update a workshop.
  */
@@ -218,6 +341,26 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
     return res.json({ workshop: result.rows[0] });
   } catch (err) {
     console.error("[workshop update] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * DELETE /api/workshops/:id/materials/:materialId
+ * Admin Only (requireAuth, requireAdmin). Delete a material.
+ */
+router.delete("/:id/materials/:materialId", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM workshop_materials WHERE id = $1 AND workshop_id = $2 RETURNING id",
+      [req.params.materialId, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+    return res.json({ message: "Material deleted", id: result.rows[0].id });
+  } catch (err) {
+    console.error("[materials delete] error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

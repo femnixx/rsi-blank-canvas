@@ -245,7 +245,7 @@ export default function MyWorkshops() {
                     {w.speaker_name && (
                       <p className="mb-1 text-sm text-zinc-700">Speaker: {w.speaker_name}</p>
                     )}
-                    <p className="mb-3 text-sm text-zinc-700">
+                    <p className="mb-1 text-sm text-zinc-700">
                       📅{" "}
                       {w.event_date
                         ? new Date(w.event_date).toLocaleDateString("en-US", {
@@ -256,6 +256,18 @@ export default function MyWorkshops() {
                         : "TBD"}
                       • 📍 {w.location}
                     </p>
+                    {w.attended ? (
+                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}
+                      </div>
+                    ) : (
+                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                        Not yet attended
+                      </div>
+                    )}
                     <button
                       onClick={() => openMaterials(w.id)}
                       className="w-full rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"

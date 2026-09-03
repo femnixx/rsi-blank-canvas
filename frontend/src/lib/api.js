@@ -79,10 +79,45 @@ export async function fetchMaterials(workshopId, token) {
   return apiFetch(`/api/workshops/${workshopId}/materials`, { token });
 }
 
-export async function addMaterial(workshopId, payload, token) {
-  return apiFetch(`/api/workshops/${workshopId}/materials`, {
+export async function addMaterial(workshopId, formData, token) {
+  const res = await fetch(`${BASE}/api/workshops/${workshopId}/materials`, {
     method: "POST",
-    body: payload,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || data.error || `Request failed (${res.status})`);
+  }
+  return data;
+}
+
+export async function deleteMaterial(workshopId, materialId, token) {
+  return apiFetch(`/api/workshops/${workshopId}/materials/${materialId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+// --- Attendance API ---
+
+export async function markAttendance(workshopId, registrationId, token) {
+  return apiFetch(`/api/workshops/${workshopId}/attendance`, {
+    method: "POST",
+    body: { registration_id: registrationId },
+    token,
+  });
+}
+
+export async function fetchWorkshopAttendance(workshopId, token) {
+  return apiFetch(`/api/workshops/${workshopId}/attendance`, { token });
+}
+
+export async function deleteAttendance(workshopId, attendanceId, token) {
+  return apiFetch(`/api/workshops/${workshopId}/attendance/${attendanceId}`, {
+    method: "DELETE",
     token,
   });
 }
