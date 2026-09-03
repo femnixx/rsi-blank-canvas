@@ -353,14 +353,14 @@ export default function MyWorkshops() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                             </svg>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="block truncate font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
-                              {m.title}
-                            </span>
-                            <span className="block text-xs text-zinc-500">
-                              Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
-                            </span>
-                          </div>
+                           <div className="min-w-0 flex-1 overflow-x-auto">
+                             <span className="block whitespace-nowrap font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
+                               {m.title}
+                             </span>
+                             <span className="block text-xs text-zinc-500">
+                               Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
+                             </span>
+                           </div>
                           <span className="flex-shrink-0 text-xs text-zinc-400">Download</span>
                         </a>
                       ))}

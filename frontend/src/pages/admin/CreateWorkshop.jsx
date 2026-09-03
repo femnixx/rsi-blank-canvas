@@ -473,18 +473,18 @@ export default function CreateWorkshop() {
                     <div className="flex-shrink-0 rounded-lg bg-zinc-50 p-2">
                       <FileIcon name={m.title} />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <a
-                        href={m.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block truncate text-sm font-semibold text-brand-blue hover:underline"
-                        title={m.title}
-                      >
-                        {m.title}
-                      </a>
-                      <p className="mt-1 text-xs text-zinc-500">{new Date(m.uploaded_at).toLocaleDateString()}</p>
-                    </div>
+                     <div className="min-w-0 flex-1 overflow-x-auto">
+                       <a
+                         href={m.file_url}
+                         target="_blank"
+                         rel="noreferrer"
+                         className="block whitespace-nowrap text-sm font-semibold text-brand-blue hover:underline"
+                         title={m.title}
+                       >
+                         {m.title}
+                       </a>
+                       <p className="mt-1 text-xs text-zinc-500">{new Date(m.uploaded_at).toLocaleDateString()}</p>
+                     </div>
                     <button
                       onClick={() => handleDeleteMaterial(m.id)}
                       className="flex-shrink-0 rounded-lg p-1.5 text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
