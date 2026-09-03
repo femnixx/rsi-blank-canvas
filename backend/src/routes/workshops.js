@@ -135,6 +135,114 @@ router.post("/:id/register", requireAuth, requireStudent, async (req, res) => {
 });
 
 /**
+ * POST /api/workshops/:id/register-public
+ * Public. Register a student by NIM without authentication.
+ * Body: { nim }
+ * Validates NIM exists in users table and is not already registered.
+ */
+router.post("/:id/register-public", async (req, res) => {
+  const { nim } = req.body;
+
+  if (!nim || typeof nim !== "string" || !nim.trim()) {
+    return res.status(400).json({ message: "NIM is required" });
+  }
+
+  try {
+    const workshopCheck = await pool.query("SELECT id FROM workshops WHERE id = $1", [req.params.id]);
+    if (workshopCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    const userResult = await pool.query("SELECT id, email, nim FROM users WHERE nim = $1", [nim.trim()]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "NIM not found in centralized database", conflict: false });
+    }
+
+    const user = userResult.rows[0];
+
+    const dupCheck = await pool.query(
+      "SELECT id FROM workshop_registrations WHERE workshop_id = $1 AND user_id = $2",
+      [req.params.id, user.id]
+    );
+    if (dupCheck.rows.length > 0) {
+      return res.status(409).json({
+        message: "You are already registered for this workshop",
+        conflict: true,
+      });
+    }
+
+    const regResult = await pool.query(
+      `INSERT INTO workshop_registrations (workshop_id, user_id, student_nim)
+       VALUES ($1, $2, $3)
+       RETURNING id, workshop_id, user_id, student_nim, registration_date`,
+      [req.params.id, user.id, user.nim]
+    );
+
+    return res.status(201).json({
+      registration: regResult.rows[0],
+      message: `Registration confirmed for NIM ${user.nim}`,
+    });
+  } catch (err) {
+    console.error("[workshop register-public] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * POST /api/workshops/:id/attendance-public
+ * Public. Mark attendance by NIM without authentication.
+ * Body: { nim }
+ * Validates NIM exists and is registered for the workshop.
+ */
+router.post("/:id/attendance-public", async (req, res) => {
+  const { nim } = req.body;
+
+  if (!nim || typeof nim !== "string" || !nim.trim()) {
+    return res.status(400).json({ message: "NIM is required" });
+  }
+
+  try {
+    const workshopCheck = await pool.query("SELECT id FROM workshops WHERE id = $1", [req.params.id]);
+    if (workshopCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    const userResult = await pool.query("SELECT id FROM users WHERE nim = $1", [nim.trim()]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "NIM not found in centralized database" });
+    }
+
+    const user = userResult.rows[0];
+
+    const regCheck = await pool.query(
+      "SELECT id FROM workshop_registrations WHERE workshop_id = $1 AND user_id = $2",
+      [req.params.id, user.id]
+    );
+    if (regCheck.rows.length === 0) {
+      return res.status(403).json({ message: "You are not registered for this workshop" });
+    }
+
+    const reg = regCheck.rows[0];
+
+    const result = await pool.query(
+      `INSERT INTO workshop_attendance (registration_id, workshop_id, user_id, status)
+       VALUES ($1, $2, $3, 'present')
+       ON CONFLICT (workshop_id, user_id) DO UPDATE SET checked_in_at = CURRENT_TIMESTAMP, status = 'present'
+       RETURNING id, registration_id, workshop_id, user_id, checked_in_at, status`,
+      [reg.id, req.params.id, user.id]
+    );
+
+    return res.status(201).json({
+      attendance: result.rows[0],
+      message: `Attendance recorded for NIM ${user.nim}`,
+    });
+  } catch (err) {
+    console.error("[workshop attendance-public] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
  * GET /api/workshops/:id/registrations
  * Authenticated. List all registrations for a workshop.
  */
@@ -236,6 +344,56 @@ router.get("/:id/materials", requireAuth, async (req, res) => {
     return res.json({ materials: result.rows, verified: true });
   } catch (err) {
     console.error("[materials list] error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/workshops/:id/materials-public
+ * Public. Return materials if NIM is registered for this workshop.
+ * Query: ?nim=...
+ */
+router.get("/:id/materials-public", async (req, res) => {
+  const { nim } = req.query;
+
+  if (!nim || typeof nim !== "string" || !nim.trim()) {
+    return res.status(400).json({ message: "NIM query parameter is required" });
+  }
+
+  try {
+    const workshopCheck = await pool.query("SELECT id FROM workshops WHERE id = $1", [req.params.id]);
+    if (workshopCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    const userResult = await pool.query("SELECT id FROM users WHERE nim = $1", [nim.trim()]);
+    if (userResult.rows.length === 0) {
+      return res.status(403).json({ message: "NIM not found in centralized database", verified: false });
+    }
+
+    const user = userResult.rows[0];
+
+    const regCheck = await pool.query(
+      "SELECT id FROM workshop_registrations WHERE workshop_id = $1 AND user_id = $2",
+      [req.params.id, user.id]
+    );
+    if (regCheck.rows.length === 0) {
+      return res.status(403).json({
+        message: "You must be a registered participant to access materials",
+        verified: false,
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT id, workshop_id, title, file_url, uploaded_at
+       FROM workshop_materials
+       WHERE workshop_id = $1
+       ORDER BY uploaded_at DESC`,
+      [req.params.id]
+    );
+    return res.json({ materials: result.rows, verified: true });
+  } catch (err) {
+    console.error("[materials list-public] error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

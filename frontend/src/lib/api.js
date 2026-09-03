@@ -63,8 +63,28 @@ export async function registerParticipant(workshopId, token) {
   return apiFetch(`/api/workshops/${workshopId}/register`, { method: "POST", token });
 }
 
+export async function registerParticipantByNim(workshopId, nim) {
+  return apiFetch(`/api/workshops/${workshopId}/register-public`, {
+    method: "POST",
+    body: { nim },
+  });
+}
+
 export async function fetchWorkshopRegistrations(workshopId, token) {
   return apiFetch(`/api/workshops/${workshopId}/registrations`, { token });
+}
+
+// --- Public NIM-based access ---
+
+export async function fetchMaterialsByNim(workshopId, nim) {
+  return apiFetch(`/api/workshops/${workshopId}/materials-public?nim=${encodeURIComponent(nim)}`);
+}
+
+export async function markAttendanceByNim(workshopId, nim) {
+  return apiFetch(`/api/workshops/${workshopId}/attendance-public`, {
+    method: "POST",
+    body: { nim },
+  });
 }
 
 // --- Student API ---
