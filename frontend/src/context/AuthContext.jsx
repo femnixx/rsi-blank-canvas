@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { apiFetch } from "../lib/api.js";
+import * as api from "../lib/api.js";
 
 const AuthContext = createContext(null);
 
@@ -14,10 +14,10 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-    apiFetch("/api/auth/me", { token })
+    api
+      .fetchMe(token)
       .then((data) => setUser(data.user))
       .catch(() => {
-        // token invalid/expired -> clear
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
@@ -25,10 +25,14 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const login = async (email, password) => {
-    const data = await apiFetch("/api/auth/login", {
+  const login = async (identifier, password) => {
+    const isEmail = identifier.includes("@");
+    const body = isEmail
+      ? { email: identifier, password }
+      : { nim: identifier, password };
+    const data = await api.apiFetch("/api/auth/login", {
       method: "POST",
-      body: { email, password },
+      body,
     });
     localStorage.setItem("token", data.token);
     setToken(data.token);
@@ -36,10 +40,10 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (email, password) => {
-    const data = await apiFetch("/api/auth/register", {
+  const register = async (email, password, nim) => {
+    const data = await api.apiFetch("/api/auth/register", {
       method: "POST",
-      body: { email, password },
+      body: { email, password, nim },
     });
     localStorage.setItem("token", data.token);
     setToken(data.token);
@@ -54,7 +58,16 @@ export function AuthProvider({ children }) {
   };
 
   const value = useMemo(
-    () => ({ user, token, loading, isAuthenticated: !!token && !!user, login, register, logout }),
+    () => ({
+      user,
+      token,
+      loading,
+      isAuthenticated: !!token && !!user,
+      isAdmin: !!user && user.role === "admin",
+      login,
+      register,
+      logout,
+    }),
     [user, token, loading]
   );
 

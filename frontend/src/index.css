@@ -3,5 +3,98 @@
 @tailwind utilities;
 
 * {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    Segoe UI, Roboto, Helvetica, Arial;
+}
+
+/* Custom focus ring — brand blue for all focusable elements */
+*:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar — matches brand palette */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth text selection color */
+::selection {
+  background: #7dd3fe;
+  color: #0f172a;
+}
+
+/* Page load fade-in */
+body {
+  @apply bg-brand-bg text-brand-text antialiased;
+}
+
+/* Section heading — Dark Navy */
+.section-heading {
+  @apply text-2xl font-bold tracking-tight text-brand-navy;
+}
+
+.section-subheading {
+  @apply text-sm text-zinc-600;
+}
+
+/* Category pill — Orange/Coral */
+.category-pill {
+  @apply inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs
+    font-medium text-brand-orange;
+}
+
+/* Status badges */
+.status-badge--present {
+  @apply inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs
+    font-medium text-brand-blue;
+}
+.status-badge--absent,
+.status-badge--pending {
+  @apply inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5
+    text-xs font-medium text-brand-orange;
+}
+
+/* Verified access badge — bright Primary Accent Blue */
+.verified-badge {
+  @apply inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs
+    font-medium text-brand-blue;
+}
+
+/* Navy gradient — subtle overlay for headers/banners */
+.bg-brand-navy-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Card with colored top accent */
+.card-accent {
+  @apply relative rounded-xl border border-zinc-200 bg-white shadow-sm
+    before:absolute before:top-0 before:left-0 before:right-0 before:h-1
+    before:bg-brand-blue before:rounded-t-xl;
+}
+
+/* Tab bar — Orange/Coral underline for active tab */
+.tab-active {
+  @apply border-b-2 border-brand-orange text-brand-orange;
+}
+.tab-inactive {
+  @apply text-zinc-600 hover:text-brand-navy;
+}
+
+/* Fluid input focus — brand blue ring */
+.input-focus {
+  @apply w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900
+    outline-none placeholder:text-zinc-400 focus:border-brand-blue
+    focus:ring-2 focus:ring-blue-100;
 }

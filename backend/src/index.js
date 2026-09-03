@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import workshopRoutes from "./routes/workshops.js";
+import studentRoutes from "./routes/student.js";
 import { initDb, pool } from "./db.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -27,6 +29,12 @@ app.get("/api/health", (req, res) => {
 
 // Auth routes (public + protected /me)
 app.use("/api/auth", authRoutes);
+
+// Workshop routes (admin create, student register, materials, etc.)
+app.use("/api/workshops", workshopRoutes);
+
+// Student portal routes
+app.use("/api/student", studentRoutes);
 
 // Example protected route: verifies strict auth
 app.get("/api/protected", requireAuth, (req, res) => {
