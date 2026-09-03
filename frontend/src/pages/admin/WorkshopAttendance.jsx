@@ -150,7 +150,7 @@ export default function WorkshopAttendance() {
           </div>
         </div>
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("roster")}
@@ -179,7 +179,7 @@ export default function WorkshopAttendance() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by NIM or email…"
-              className="w-64 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100 sm:w-64"
             />
           )}
         </div>
