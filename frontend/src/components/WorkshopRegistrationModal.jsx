@@ -52,7 +52,7 @@ export default function WorkshopRegistrationModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-xl">
+      <div className="w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-xl sm:max-w-md">
         <h2 className="text-lg font-semibold text-brand-navy">Confirm Registration</h2>
         <p className="mt-1 text-sm text-zinc-600">
           Register for "{workshop?.title}"? This will enroll your account ({/* NIM comes from your profile */})

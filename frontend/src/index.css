@@ -98,3 +98,22 @@ body {
     outline-none placeholder:text-zinc-400 focus:border-brand-blue
     focus:ring-2 focus:ring-blue-100;
 }
+
+/* Minimum touch target size for interactive elements on mobile */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  button[type="submit"],
+  button[type="button"],
+  .btn-primary {
+    min-height: 44px;
+  }
+}
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}

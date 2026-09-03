@@ -121,23 +121,25 @@ export default function MyWorkshops() {
         )}
 
         {/* Tab Bar — Orange/Coral underline for active tab */}
-        <div className="mb-6 flex border-b border-zinc-200">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "all" ? "tab-active" : "tab-inactive"
-            }`}
-          >
-            All Workshops
-          </button>
-          <button
-            onClick={() => setActiveTab("enrolled")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "enrolled" ? "tab-active" : "tab-inactive"
-            }`}
-          >
-            My Enrolled Workshops
-          </button>
+        <div className="mb-6 overflow-x-auto border-b border-zinc-200">
+          <div className="flex min-w-max items-center gap-2">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === "all" ? "tab-active" : "tab-inactive"
+              }`}
+            >
+              All Workshops
+            </button>
+            <button
+              onClick={() => setActiveTab("enrolled")}
+              className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === "enrolled" ? "tab-active" : "tab-inactive"
+              }`}
+            >
+              My Enrolled Workshops
+            </button>
+          </div>
         </div>
 
         {/* All Workshops Tab */}
@@ -275,7 +277,7 @@ export default function MyWorkshops() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-6 shadow-xl">
+          <div className="w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-xl sm:max-w-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-brand-navy">Course Materials</h2>
               <button
