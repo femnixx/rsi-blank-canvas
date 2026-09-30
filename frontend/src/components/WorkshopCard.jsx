@@ -78,12 +78,14 @@ export default function WorkshopCard({ workshop, onRegister, isAdmin, onDelete, 
               </Link>
             </>
           )}
-          <button
-            onClick={() => onRegister && onRegister(workshop)}
-            className="rounded-lg bg-brand-blue px-4 py-1.5 text-sm font-medium text-white transition hover:bg-sky-600"
-          >
-            Register
-          </button>
+          {!isAdmin && onRegister && (
+            <button
+              onClick={() => onRegister(workshop)}
+              className="rounded-lg bg-brand-blue px-4 py-1.5 text-sm font-medium text-white transition hover:bg-sky-600"
+            >
+              Register
+            </button>
+          )}
           <Link
             to={`/workshops/${workshop.id}`}
             className="rounded-lg border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-brand-navy transition hover:bg-zinc-50"

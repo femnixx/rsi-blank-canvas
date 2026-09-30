@@ -101,7 +101,7 @@ export default function MyWorkshops() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-56px)] bg-brand-bg px-6 py-12">
+    <main className="min-h-[calc(100vh-56px)] bg-brand-bg px-4 sm:px-6 py-8 sm:py-12">
       <div className="mx-auto max-w-6xl">
         {/* Dark Navy Welcome Banner */}
         <div className="mb-8 rounded-xl border border-zinc-200 bg-brand-navy-gradient p-6 text-white shadow-sm">
@@ -156,31 +156,33 @@ export default function MyWorkshops() {
                   return (
                     <div
                       key={w.id}
-                      className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
+                      className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm flex flex-col h-full"
                     >
-                      <div className="mb-2 flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-brand-navy">{w.title}</h3>
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-brand-blue">
+                      <div className="mb-2 flex items-start justify-between gap-2 flex-wrap">
+                        <h3 className="text-lg font-semibold text-brand-navy min-w-0">{w.title}</h3>
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-brand-blue shrink-0">
                           {w.registration_count} registered
                         </span>
                       </div>
-                      <p className="mb-2 line-clamp-2 text-sm text-zinc-600">
+                      <p className="mb-2 line-clamp-2 text-sm text-zinc-600 flex-1">
                         {w.description || "No description provided."}
                       </p>
                       {w.speaker_name && (
                         <p className="mb-1 text-sm text-zinc-700">Speaker: {w.speaker_name}</p>
                       )}
-                      <p className="mb-3 text-sm text-zinc-700">
-                        📅{" "}
-                        {w.event_date
-                          ? new Date(w.event_date).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : "TBD"}
+                      <p className="mb-3 text-sm text-zinc-700 flex items-center gap-1">
+                        <span>📅</span>
+                        <span>
+                          {w.event_date
+                            ? new Date(w.event_date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "TBD"}
+                        </span>
                       </p>
-                      <div className="flex gap-2">
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-3 border-t border-zinc-100">
                         {!isRegistered ? (
                           <button
                             onClick={() => handleRegister(w.id)}
@@ -231,37 +233,45 @@ export default function MyWorkshops() {
                 {enrolledWorkshops.map((w) => (
                   <div
                     key={w.id}
-                    className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
+                    className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm flex flex-col h-full"
                   >
-                    <div className="mb-2 flex items-start justify-between">
-                      <h3 className="text-lg font-semibold text-brand-navy">{w.title}</h3>
-                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-orange">
+                    <div className="mb-2 flex items-start justify-between gap-2 flex-wrap">
+                      <h3 className="text-lg font-semibold text-brand-navy min-w-0">{w.title}</h3>
+                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-orange shrink-0">
                         Enrolled
                       </span>
                     </div>
-                    <p className="mb-2 text-sm text-zinc-600">
+                    <p className="mb-2 text-sm text-zinc-600 flex-1">
                       {w.description || "No description provided."}
                     </p>
                     {w.speaker_name && (
                       <p className="mb-1 text-sm text-zinc-700">Speaker: {w.speaker_name}</p>
                     )}
-                    <p className="mb-1 text-sm text-zinc-700">
-                      📅{" "}
-                      {w.event_date
-                        ? new Date(w.event_date).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        : "TBD"}
-                      • 📍 {w.location}
+                    <p className="mb-1 text-sm text-zinc-700 flex items-center gap-1 flex-wrap">
+                      <span>📅</span>
+                      <span>
+                        {w.event_date
+                          ? new Date(w.event_date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "TBD"}
+                      </span>
+                      {w.location && (
+                        <>
+                          <span className="text-zinc-400">•</span>
+                          <span>📍</span>
+                          <span>{w.location}</span>
+                        </>
+                      )}
                     </p>
                     {w.attended ? (
-                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                        <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
-                        Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}
+                        <span>Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}</span>
                       </div>
                     ) : (
                       <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
@@ -270,7 +280,7 @@ export default function MyWorkshops() {
                     )}
                     <button
                       onClick={() => openMaterials(w.id)}
-                      className="w-full rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+                      className="mt-auto w-full rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
                     >
                       View Course Materials
                     </button>
@@ -334,7 +344,7 @@ export default function MyWorkshops() {
                 {materialsData.verified && materialsData.materials.length === 0 ? (
                   <div className="py-8 text-center">
                     <svg className="mx-auto h-10 w-10 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125-1.125V11.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                     </svg>
                     <p className="mt-2 text-sm text-zinc-500">No materials uploaded yet.</p>
                   </div>
@@ -350,17 +360,17 @@ export default function MyWorkshops() {
                         >
                           <div className="flex-shrink-0 rounded-lg bg-white p-2">
                             <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125-1.125V11.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                             </svg>
                           </div>
-                           <div className="min-w-0 flex-1 overflow-x-auto">
-                             <span className="block whitespace-nowrap font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
-                               {m.title}
-                             </span>
-                             <span className="block text-xs text-zinc-500">
-                               Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
-                             </span>
-                           </div>
+                          <div className="min-w-0 flex-1 overflow-x-auto">
+                            <span className="block whitespace-nowrap font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
+                              {m.title}
+                            </span>
+                            <span className="block text-xs text-zinc-500">
+                              Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
+                            </span>
+                          </div>
                           <span className="flex-shrink-0 text-xs text-zinc-400">Download</span>
                         </a>
                       ))}

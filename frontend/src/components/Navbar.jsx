@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 /**
@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Navbar() {
   const { isAuthenticated, isAdmin, logout, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinkClass = "block px-4 py-2 text-sm font-medium transition-colors";
@@ -21,6 +22,11 @@ export default function Navbar() {
       : navLinkClass + " " + navLinkInactive;
 
   const closeMenu = () => setMenuOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-zinc-200 bg-brand-navy-gradient px-4 py-3 shadow-sm text-white sm:px-6">
@@ -74,27 +80,27 @@ export default function Navbar() {
 
       {/* Actions - right */}
       <div className="flex items-center gap-2">
-        {isAuthenticated ? (
-          <>
-            <span className="hidden xs:inline text-xs text-zinc-300">
-              {user?.email}
-            </span>
-            <button
-              onClick={logout}
-              className="hidden sm:inline-block rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-brand-navy transition hover:bg-zinc-50"
-              aria-label="Logout"
-            >
-              Logout
-            </button>
-            <button
-              onClick={logout}
-              className="sm:hidden rounded-lg bg-white p-2 text-brand-navy"
-              aria-label="Logout"
-            >
-              <span>🚪</span>
-            </button>
-          </>
-        ) : (
+{isAuthenticated ? (
+           <>
+             <span className="hidden xs:inline text-xs text-zinc-300">
+               {user?.email}
+             </span>
+             <button
+               onClick={handleLogout}
+               className="hidden sm:inline-block rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-brand-navy transition hover:bg-zinc-50"
+               aria-label="Logout"
+             >
+               Logout
+             </button>
+             <button
+               onClick={handleLogout}
+               className="sm:hidden rounded-lg bg-white p-2 text-brand-navy"
+               aria-label="Logout"
+             >
+               <span>🚪</span>
+             </button>
+           </>
+         ) : (
           <Link
             to="/login"
             className="rounded-lg bg-brand-blue px-4 py-1.5 text-sm font-medium text-white transition hover:bg-sky-600"

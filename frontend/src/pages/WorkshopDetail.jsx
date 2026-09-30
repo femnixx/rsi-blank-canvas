@@ -74,7 +74,12 @@ export default function WorkshopDetail() {
     setMaterials(null);
     try {
       const data = await fetchMaterials(id, token);
-      setMaterials(data);
+      // For admins, force verified=true to bypass registration check
+      if (isAdmin) {
+        setMaterials({ ...data, verified: true });
+      } else {
+        setMaterials(data);
+      }
     } catch (err) {
       setMaterialsError(err.message);
     } finally {
@@ -144,6 +149,9 @@ export default function WorkshopDetail() {
     checkRegistration();
     loadMaterials();
   };
+
+  // For admins, always show materials without registration check
+  const canViewMaterials = isAdmin || (materials?.verified === true);
 
   if (loading) {
     return (
@@ -291,9 +299,11 @@ export default function WorkshopDetail() {
           <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm mb-8">
             <h2 className="section-heading text-lg mb-4">Course Materials</h2>
 
-            {materials.verified ? (
+            {canViewMaterials ? (
               <div className="mb-4">
-                <span className="verified-badge">✓ Verified Student Access Granted</span>
+                <span className="verified-badge">
+                  {isAdmin ? "⚡ Admin Access Granted" : "✓ Verified Student Access Granted"}
+                </span>
               </div>
             ) : (
               <div className="mb-4 text-sm text-zinc-600">
@@ -301,10 +311,10 @@ export default function WorkshopDetail() {
               </div>
             )}
 
-            {materials.verified && materials.materials.length === 0 ? (
+            {canViewMaterials && materials.materials.length === 0 ? (
               <p className="text-sm text-zinc-500">No materials have been uploaded yet.</p>
             ) : (
-              materials.verified && (
+              canViewMaterials && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {materials.materials.map((m) => (
                     <a
@@ -315,7 +325,7 @@ export default function WorkshopDetail() {
                     >
                       <div className="flex-shrink-0 rounded-lg bg-white p-2">
                         <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125-1.125V11.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1 overflow-x-auto">
