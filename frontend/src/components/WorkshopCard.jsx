@@ -73,12 +73,14 @@ export default function WorkshopCard({ workshop, onRegister, isAdmin, onDelete, 
               </Link>
             </>
           )}
-          <button
-            onClick={() => onRegister && onRegister(workshop)}
-            className="btn-primary !py-1.5 !text-xs"
-          >
-            Register
-          </button>
+          {!isAdmin && onRegister && (
+            <button
+              onClick={() => onRegister(workshop)}
+              className="btn-primary !py-1.5 !text-xs"
+            >
+              Register
+            </button>
+          )}
           <Link
             to={`/workshops/${workshop.id}`}
             className="btn-ghost !py-1.5 !text-xs"

@@ -74,7 +74,11 @@ export default function WorkshopDetail() {
     setMaterials(null);
     try {
       const data = await fetchMaterials(id, token);
-      setMaterials(data);
+      if (isAdmin) {
+        setMaterials({ ...data, verified: true });
+      } else {
+        setMaterials(data);
+      }
     } catch (err) {
       setMaterialsError(err.message);
     } finally {
@@ -144,6 +148,8 @@ export default function WorkshopDetail() {
     checkRegistration();
     loadMaterials();
   };
+
+  const canViewMaterials = isAdmin || (materials?.verified === true);
 
   if (loading) {
     return (

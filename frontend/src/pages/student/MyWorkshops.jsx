@@ -103,7 +103,6 @@ export default function MyWorkshops() {
       </div>
 
       <div className="p-6">
-        {/* Welcome banner */}
         <div className="card-accent mb-8 !bg-gradient-to-r !from-brand-navy !to-brand-slate">
           <h1 className="text-2xl font-bold text-white">Welcome, {user?.email?.split("@")[0] || "Student"}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-brand-muted">
@@ -123,7 +122,6 @@ export default function MyWorkshops() {
           </div>
         )}
 
-        {/* Tab Bar */}
         <div className="mb-6 overflow-x-auto border-b border-brand-border">
           <div className="flex min-w-max items-center gap-2">
             <button
@@ -145,7 +143,6 @@ export default function MyWorkshops() {
           </div>
         </div>
 
-        {/* All Workshops Tab */}
         {activeTab === "all" && (
           <div>
             {loading || allWorkshops === null ? (
@@ -179,7 +176,7 @@ export default function MyWorkshops() {
                             })
                           : "TBD"}
                       </p>
-                      <div className="flex gap-2">
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-3 border-t border-brand-border">
                         {!isRegistered ? (
                           <button
                             onClick={() => handleRegister(w.id)}
@@ -205,7 +202,6 @@ export default function MyWorkshops() {
           </div>
         )}
 
-        {/* My Enrolled Workshops Tab */}
         {activeTab === "enrolled" && (
           <div>
             {loading ? (
@@ -253,7 +249,7 @@ export default function MyWorkshops() {
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
-                        Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}
+                        <span>Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}</span>
                       </div>
                     ) : (
                       <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-zinc-500/20 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
@@ -275,7 +271,6 @@ export default function MyWorkshops() {
         )}
       </div>
 
-      {/* Materials Modal */}
       {materialsOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
