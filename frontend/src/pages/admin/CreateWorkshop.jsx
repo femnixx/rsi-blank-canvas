@@ -14,18 +14,18 @@ function FileIcon({ name }) {
   const ext = name.split(".").pop().toLowerCase();
   const color =
     ext === "pdf"
-      ? "text-red-500"
+      ? "text-red-400"
       : ["doc", "docx"].includes(ext)
-      ? "text-blue-500"
+      ? "text-blue-400"
       : ["xls", "xlsx"].includes(ext)
-      ? "text-green-600"
+      ? "text-emerald-400"
       : ["ppt", "pptx"].includes(ext)
-      ? "text-orange-500"
+      ? "text-orange-400"
       : ["zip", "rar", "7z"].includes(ext)
-      ? "text-yellow-600"
+      ? "text-yellow-400"
       : ["png", "jpg", "jpeg", "gif", "svg"].includes(ext)
-      ? "text-purple-500"
-      : "text-zinc-500";
+      ? "text-purple-400"
+      : "text-brand-muted";
 
   return (
     <svg className={`h-6 w-6 ${color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -37,20 +37,18 @@ function FileIcon({ name }) {
 function AnimatedBackground() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-brand-blue/5 blur-3xl animate-pulse-slow" />
+      <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-brand-blue/10 blur-3xl animate-pulse-slow" />
       <div className="absolute top-1/3 -left-40 h-80 w-80 rounded-full bg-brand-orange/5 blur-3xl animate-pulse-slow" style={{ animationDelay: "1s" }} />
-      <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-brand-blue/5 blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
+      <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-brand-blue/10 blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
 
       <svg className="absolute inset-0 h-full w-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-brand-navy" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
-
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-brand-bg/50" />
     </div>
   );
 }
@@ -58,21 +56,21 @@ function AnimatedBackground() {
 function UploadProgress({ files, progress }) {
   return (
     <div className="mt-6 space-y-3">
-      <p className="text-sm font-medium text-zinc-700">Uploading files...</p>
+      <p className="text-sm font-medium text-white">Uploading files...</p>
       <ul className="space-y-2">
         {files.map((file, index) => (
-          <li key={index} className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-2.5">
+          <li key={index} className="flex items-center gap-3 rounded-xl border border-brand-border bg-white/5 px-4 py-2.5">
             <div className="h-5 w-5 flex-shrink-0 animate-spin rounded-full border-2 border-brand-blue border-t-transparent" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-zinc-700">{file.name}</p>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+              <p className="text-sm font-medium text-white">{file.name}</p>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-brand-border">
                 <div
                   className="h-full rounded-full bg-brand-blue transition-all duration-300"
                   style={{ width: `${progress[index] || 0}%` }}
                 />
               </div>
             </div>
-            <span className="text-xs text-zinc-500">{Math.round(progress[index] || 0)}%</span>
+            <span className="text-xs text-brand-muted">{Math.round(progress[index] || 0)}%</span>
           </li>
         ))}
       </ul>
@@ -280,27 +278,27 @@ export default function CreateWorkshop() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-brand-bg px-6">
+      <div className="flex min-h-screen items-center justify-center bg-brand-bg px-6">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-blue border-t-transparent" />
-          <p className="text-sm text-zinc-500">Loading workshop…</p>
+          <p className="text-sm text-brand-muted">Loading workshop…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="relative min-h-[calc(100vh-56px)] bg-brand-bg px-6 py-12">
+    <main className="relative min-h-screen bg-brand-bg px-6 py-12">
       <AnimatedBackground />
 
       <div className="relative mx-auto max-w-4xl">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-navy">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             {isEdit ? "Edit Workshop" : "Create New Workshop Session"}
           </h1>
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-600 transition hover:border-brand-blue hover:text-brand-navy"
+            className="btn-ghost"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -309,7 +307,7 @@ export default function CreateWorkshop() {
           </button>
         </div>
 
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-navy via-slate-800 to-slate-900 p-8 shadow-2xl">
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-brand-border bg-brand-gradient-to-r from-brand-navy via-slate-800 to-slate-900 p-8 shadow-2xl">
           <div className="absolute inset-0 opacity-10">
             <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -329,17 +327,17 @@ export default function CreateWorkshop() {
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-white">{isEdit ? "Edit Session Details" : "New Workshop Session"}</h2>
-              <p className="mt-2 text-sm text-zinc-300">
+              <p className="mt-2 text-sm text-brand-muted">
                 {isEdit ? "Update the workshop information below." : "Fill in the details below to publish a new workshop session."}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-200">
+                <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-brand-muted">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Duration: 2-3 hours
                 </div>
-                <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-200">
+                <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-brand-muted">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h.75" />
                   </svg>
@@ -351,7 +349,7 @@ export default function CreateWorkshop() {
         </div>
 
         {error && (
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 shadow-sm animate-slide-up">
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400 shadow-sm animate-slide-up">
             <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
@@ -360,7 +358,7 @@ export default function CreateWorkshop() {
         )}
 
         {success && (
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700 shadow-sm animate-slide-up">
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-400 shadow-sm animate-slide-up">
             <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -368,11 +366,11 @@ export default function CreateWorkshop() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mb-8 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <form onSubmit={handleSubmit} className="mb-8 rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-8 shadow-xl">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-zinc-700">
-                Workshop Title <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-white mb-1">
+                Workshop Title <span className="text-red-400">*</span>
                 <input
                   type="text"
                   name="title"
@@ -380,13 +378,13 @@ export default function CreateWorkshop() {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="e.g. Advanced React Patterns"
-                  className="mt-2 w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition"
+                  className="mt-2 input-dark"
                 />
               </label>
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-zinc-700">
+              <label className="block text-sm font-medium text-white mb-1">
                 Description
                 <textarea
                   name="description"
@@ -394,13 +392,13 @@ export default function CreateWorkshop() {
                   onChange={handleChange}
                   placeholder="What will participants learn?"
                   rows={4}
-                  className="mt-2 w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition"
+                  className="mt-2 input-dark"
                 />
               </label>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700">
+              <label className="block text-sm font-medium text-white mb-1">
                 Speaker Name
                 <input
                   type="text"
@@ -408,13 +406,13 @@ export default function CreateWorkshop() {
                   value={formData.speaker_name}
                   onChange={handleChange}
                   placeholder="e.g. Dr. Jane Smith"
-                  className="mt-2 w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition"
+                  className="mt-2 input-dark"
                 />
               </label>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700">
+              <label className="block text-sm font-medium text-white mb-1">
                 Location
                 <input
                   type="text"
@@ -422,21 +420,21 @@ export default function CreateWorkshop() {
                   value={formData.location}
                   onChange={handleChange}
                   placeholder="e.g. Room 203, Main Building"
-                  className="mt-2 w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition"
+                  className="mt-2 input-dark"
                 />
               </label>
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-zinc-700">
-                Date & Time <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-white mb-1">
+                Date & Time <span className="text-red-400">*</span>
                 <input
                   type="datetime-local"
                   name="event_date"
                   required
                   value={formData.event_date}
                   onChange={handleChange}
-                  className="mt-2 w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition"
+                  className="mt-2 input-dark"
                 />
               </label>
             </div>
@@ -445,20 +443,24 @@ export default function CreateWorkshop() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-8 w-full rounded-lg bg-brand-blue px-4 py-3 text-sm font-medium text-white transition hover:bg-sky-600 disabled:opacity-50"
+            className="mt-8 w-full btn-primary disabled:opacity-50"
           >
-            {submitting ? (isEdit ? "Saving Changes…" : "Publishing Workshop…") : isEdit ? "Save Changes" : "Publish Workshop"}
+            {submitting ? (
+              <><div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> {isEdit ? "Saving Changes…" : "Publishing Workshop…"}</>
+            ) : (
+              isEdit ? "Save Changes" : "Publish Workshop"
+            )}
           </button>
         </form>
 
         {(isEdit || createdWorkshopId) && (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-8 shadow-xl">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold text-brand-navy">Workshop Materials</h3>
-                <p className="mt-1 text-sm text-zinc-500">Upload slides, PDFs, spreadsheets, or other resources for participants.</p>
+                <h3 className="text-2xl font-bold text-white">Workshop Materials</h3>
+                <p className="mt-1 text-sm text-brand-muted">Upload slides, PDFs, spreadsheets, or other resources for participants.</p>
               </div>
-              <div className="rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold text-brand-blue">
+              <div className="rounded-full bg-brand-blue/20 px-4 py-1.5 text-xs font-semibold text-brand-blue">
                 {materials.length} file{materials.length !== 1 ? "s" : ""}
               </div>
             </div>
@@ -468,26 +470,26 @@ export default function CreateWorkshop() {
                 {materials.map((m) => (
                   <div
                     key={m.id}
-                    className="group relative flex items-start gap-3 rounded-xl border border-zinc-100 p-4 transition hover:border-zinc-300 hover:shadow-md"
+                    className="group relative flex items-start gap-3 rounded-xl border border-brand-border bg-white/5 p-4 transition hover:border-brand-blue/40"
                   >
-                    <div className="flex-shrink-0 rounded-lg bg-zinc-50 p-2">
+                    <div className="flex-shrink-0 rounded-lg bg-white/5 p-2">
                       <FileIcon name={m.title} />
                     </div>
                      <div className="min-w-0 flex-1 overflow-x-auto">
-                       <a
-                         href={m.file_url}
-                         target="_blank"
-                         rel="noreferrer"
-                         className="block whitespace-nowrap text-sm font-semibold text-brand-blue hover:underline"
-                         title={m.title}
-                       >
-                         {m.title}
-                       </a>
-                       <p className="mt-1 text-xs text-zinc-500">{new Date(m.uploaded_at).toLocaleDateString()}</p>
-                     </div>
+                        <a
+                          href={m.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate text-sm font-semibold text-brand-blue hover:underline"
+                          title={m.title}
+                        >
+                          {m.title}
+                        </a>
+                        <p className="mt-1 text-xs text-brand-muted">{new Date(m.uploaded_at).toLocaleDateString()}</p>
+                      </div>
                     <button
                       onClick={() => handleDeleteMaterial(m.id)}
-                      className="flex-shrink-0 rounded-lg p-1.5 text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                      className="flex-shrink-0 rounded-lg p-1.5 text-brand-muted transition hover:bg-red-500/10 hover:text-red-400"
                       title="Delete material"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -500,7 +502,7 @@ export default function CreateWorkshop() {
             )}
 
             {!isEdit && !createdWorkshopId && (
-              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+              <div className="mb-6 rounded-xl border border-orange-500/20 bg-orange-500/10 px-5 py-4 text-sm text-orange-400">
                 Publish the workshop first, then you can upload materials.
               </div>
             )}
@@ -510,8 +512,8 @@ export default function CreateWorkshop() {
                 <div
                   className={`relative rounded-2xl border-2 border-dashed p-10 text-center transition ${
                     dragOver
-                      ? "border-brand-blue bg-blue-50/50 scale-[1.01]"
-                      : "border-zinc-300 hover:border-zinc-400"
+                      ? "border-brand-blue bg-brand-blue/10 scale-[1.01]"
+                      : "border-brand-border hover:border-brand-muted"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -527,25 +529,25 @@ export default function CreateWorkshop() {
                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.png,.jpg,.jpeg"
                   />
 
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 transition group-hover:scale-110">
-                    <svg className="h-8 w-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 transition group-hover:scale-110">
+                    <svg className="h-8 w-8 text-brand-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
                   </div>
-                  <p className="mt-4 text-base font-semibold text-zinc-700">Drop files here or click to browse</p>
-                  <p className="mt-2 text-xs text-zinc-500">PDF, DOC, PPT, XLS, TXT, ZIP, PNG, JPG up to 10 MB each</p>
+                  <p className="mt-4 text-base font-semibold text-white">Drop files here or click to browse</p>
+                  <p className="mt-2 text-xs text-brand-muted">PDF, DOC, PPT, XLS, TXT, ZIP, PNG, JPG up to 10 MB each</p>
                 </div>
 
                 {selectedFiles.length > 0 && (
                   <div className="mt-8 space-y-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-base font-semibold text-zinc-700">
+                      <p className="text-base font-semibold text-white">
                         Selected files ({selectedFiles.length})
                       </p>
                       <button
                         type="button"
                         onClick={() => setSelectedFiles([])}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/10"
                       >
                         Clear all
                       </button>
@@ -554,19 +556,19 @@ export default function CreateWorkshop() {
                       {selectedFiles.map((file, index) => (
                         <li
                           key={`${file.name}-${index}`}
-                          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3"
+                          className="flex items-center gap-3 rounded-xl border border-brand-border bg-white/5 px-4 py-3"
                         >
                           <div className="flex-shrink-0">
                             <FileIcon name={file.name} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-zinc-700">{file.name}</p>
-                            <p className="text-xs text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
+                            <p className="truncate text-sm font-semibold text-white">{file.name}</p>
+                            <p className="text-xs text-brand-muted">{(file.size / 1024).toFixed(1)} KB</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeFile(index)}
-                            className="flex-shrink-0 rounded-lg p-1.5 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
+                            className="flex-shrink-0 rounded-lg p-1.5 text-brand-muted transition hover:bg-red-500/10 hover:text-red-400"
                           >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -583,7 +585,7 @@ export default function CreateWorkshop() {
                 <button
                   type="submit"
                   disabled={uploading || selectedFiles.length === 0}
-                  className="mt-6 w-full rounded-lg bg-brand-blue px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:opacity-50"
+                  className="mt-6 w-full btn-primary disabled:opacity-50"
                 >
                   {uploading ? (
                     <span className="flex items-center justify-center gap-2">

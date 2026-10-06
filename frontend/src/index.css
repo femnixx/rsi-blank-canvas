@@ -7,99 +7,132 @@
     Segoe UI, Roboto, Helvetica, Arial;
 }
 
-/* Custom focus ring — brand blue for all focusable elements */
 *:focus-visible {
-  outline: 2px solid #0ea5e9;
+  outline: 2px solid rgba(14, 165, 233, 0.5);
   outline-offset: 2px;
 }
 
-/* Custom scrollbar — matches brand palette */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: rgba(15, 23, 42, 0.8);
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(148, 163, 184, 0.5);
 }
 
-/* Smooth text selection color */
 ::selection {
-  background: #7dd3fe;
-  color: #0f172a;
+  background: rgba(14, 165, 233, 0.4);
+  color: #f1f5f9;
 }
 
-/* Page load fade-in */
 body {
-  @apply bg-brand-bg text-brand-text antialiased;
+  @apply bg-brand-navy text-brand-text antialiased;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 30%, rgba(14, 165, 233, 0.06) 0%, transparent 50%);
+  min-height: 100vh;
 }
 
-/* Section heading — Dark Navy */
-.section-heading {
-  @apply text-2xl font-bold tracking-tight text-brand-navy;
+#root {
+  min-height: 100vh;
 }
 
-.section-subheading {
-  @apply text-sm text-zinc-600;
+@layer components {
+  .glass-panel {
+    @apply rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-5 shadow-xl;
+  }
+
+  .glass-card {
+    @apply rounded-xl border border-brand-border bg-brand-card backdrop-blur-glass p-4 shadow-lg;
+  }
+
+  .glass-sidebar {
+    @apply w-64 border-r border-brand-border bg-brand-glass backdrop-blur-glass;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all duration-200 hover:bg-sky-400;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-brand-border bg-white/5 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-white/10;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-brand-muted transition-colors hover:text-white hover:bg-white/5;
+  }
+
+  .input-dark {
+    @apply w-full rounded-lg border border-brand-border bg-white/5 px-3 py-2 text-sm text-white placeholder:text-brand-muted outline-none transition-all duration-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50;
+  }
+
+  .card-accent {
+    @apply relative rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-5 shadow-lg transition-all duration-300 hover:border-brand-blue/40 hover:shadow-blue-500/10;
+  }
+
+  .section-heading {
+    @apply text-2xl font-bold tracking-tight text-white;
+  }
+
+  .section-subheading {
+    @apply text-sm text-brand-muted;
+  }
+
+  .status-badge--present {
+    @apply inline-flex items-center rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400;
+  }
+
+  .status-badge--absent,
+  .status-badge--pending {
+    @apply inline-flex items-center rounded-full bg-orange-500/20 px-2.5 py-0.5 text-xs font-medium text-orange-400;
+  }
+
+  .verified-badge {
+    @apply inline-flex items-center gap-1 rounded-full bg-brand-blue/20 px-3 py-1 text-xs font-medium text-brand-blue;
+  }
+
+  .category-pill {
+    @apply inline-flex items-center rounded-full bg-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue;
+  }
+
+  .tab-active {
+    @apply border-b-2 border-brand-blue text-brand-blue;
+  }
+
+  .tab-inactive {
+    @apply text-brand-muted hover:text-white hover:bg-white/5;
+  }
+
+  .input-focus {
+    @apply w-full rounded-lg border border-brand-border bg-white/5 px-3 py-2 text-sm text-white placeholder:text-brand-muted outline-none transition-all duration-200 focus:border-brand-blue focus:ring-1 focus:ring-blue-500/30;
+  }
 }
 
-/* Category pill — Orange/Coral */
-.category-pill {
-  @apply inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs
-    font-medium text-brand-orange;
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
 }
 
-/* Status badges */
-.status-badge--present {
-  @apply inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs
-    font-medium text-brand-blue;
-}
-.status-badge--absent,
-.status-badge--pending {
-  @apply inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5
-    text-xs font-medium text-brand-orange;
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
 }
 
-/* Verified access badge — bright Primary Accent Blue */
-.verified-badge {
-  @apply inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs
-    font-medium text-brand-blue;
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
 }
 
-/* Navy gradient — subtle overlay for headers/banners */
-.bg-brand-navy-gradient {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
 }
 
-/* Card with colored top accent */
-.card-accent {
-  @apply relative rounded-xl border border-zinc-200 bg-white shadow-sm
-    before:absolute before:top-0 before:left-0 before:right-0 before:h-1
-    before:bg-brand-blue before:rounded-t-xl;
-}
-
-/* Tab bar — Orange/Coral underline for active tab */
-.tab-active {
-  @apply border-b-2 border-brand-orange text-brand-orange;
-}
-.tab-inactive {
-  @apply text-zinc-600 hover:text-brand-navy;
-}
-
-/* Fluid input focus — brand blue ring */
-.input-focus {
-  @apply w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900
-    outline-none placeholder:text-zinc-400 focus:border-brand-blue
-    focus:ring-2 focus:ring-blue-100;
-}
-
-/* Minimum touch target size for interactive elements on mobile */
+/* Mobile touch targets */
 @media (max-width: 767px) {
   input,
   select,
@@ -113,7 +146,42 @@ body {
   }
 }
 
-/* Smooth scroll for anchor links */
 html {
   scroll-behavior: smooth;
+}
+
+/* Shimmer effect for loading states */
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Gradient border effect */
+.gradient-border {
+  position: relative;
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 1rem;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(59, 130, 246, 0.1), rgba(14, 165, 233, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3), 0 0 60px rgba(14, 165, 233, 0.1);
+}
+
+.glow-cmmi {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.1);
 }

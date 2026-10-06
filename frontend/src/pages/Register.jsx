@@ -39,21 +39,26 @@ export default function Register() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-zinc-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4 py-12">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-sm rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-8 shadow-xl"
       >
-        <h1 className="text-xl font-semibold tracking-tight text-brand-navy">Create account</h1>
-        <p className="mt-1 text-sm text-zinc-500">Register with email and NIM</p>
+        <div className="text-center mb-6">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue text-lg font-bold text-white shadow-lg shadow-blue-500/30">
+            RSI
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-white">Create account</h1>
+          <p className="mt-1 text-sm text-brand-muted">Register with email and NIM</p>
+        </div>
 
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <div className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
             {error}
           </div>
         )}
 
-        <label className="mt-6 block text-sm font-medium text-zinc-700">
+        <label className="block text-sm font-medium text-white mb-1">
           Email
           <input
             type="email"
@@ -62,23 +67,23 @@ export default function Register() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+            className="mt-1 input-dark"
           />
         </label>
 
-        <label className="mt-4 block text-sm font-medium text-zinc-700">
+        <label className="block text-sm font-medium text-white mb-1 mt-4">
           Student NIM
           <input
             type="text"
             autoComplete="off"
             value={nim}
             onChange={(e) => setNim(e.target.value)}
-            placeholder="e.g. 2404030 (optional)"
-            className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+            placeholder="e.g. 21515020... (optional)"
+            className="mt-1 input-dark"
           />
         </label>
 
-        <label className="mt-4 block text-sm font-medium text-zinc-700">
+        <label className="block text-sm font-medium text-white mb-1 mt-4">
           Password
           <input
             type="password"
@@ -87,11 +92,11 @@ export default function Register() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+            className="mt-1 input-dark"
           />
         </label>
 
-        <label className="mt-4 block text-sm font-medium text-zinc-700">
+        <label className="block text-sm font-medium text-white mb-1 mt-4">
           Confirm password
           <input
             type="password"
@@ -100,24 +105,25 @@ export default function Register() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="Repeat password"
-            className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+            className="mt-1 input-dark"
           />
         </label>
 
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-600 disabled:opacity-50"
+          className="mt-6 w-full btn-primary disabled:opacity-50"
         >
-          {loading ? "Creating…" : "Register"}
+          {loading ? (
+            <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Creating…</>
+          ) : (
+            "Register"
+          )}
         </button>
 
-        <p className="mt-4 text-center text-sm text-zinc-500">
+        <p className="mt-4 text-center text-sm text-brand-muted">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-brand-navy underline decoration-zinc-300 underline-offset-4 hover:decoration-brand-navy"
-          >
+          <Link to="/login" className="font-medium text-brand-blue hover:underline">
             Login
           </Link>
         </p>

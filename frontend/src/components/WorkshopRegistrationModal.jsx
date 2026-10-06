@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { registerParticipant } from "../lib/api.js";
 
-/**
- * WorkshopRegistrationModal — simple confirmation modal for workshop registration.
- * Since students register while authenticated, their NIM/email come from the JWT.
- * Handles 409 Conflict (already registered) and network errors.
- * @param {{ isOpen: boolean, onClose: () => void, workshop, token: string, onRegistered?: () => void }} props
- */
 export default function WorkshopRegistrationModal({
   isOpen,
   onClose,
@@ -15,7 +9,7 @@ export default function WorkshopRegistrationModal({
   onRegistered,
 }) {
   const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState(null); // { type: "success" | "conflict" | "error", message: string }
+  const [status, setStatus] = useState(null);
 
   const handleClose = () => {
     setStatus(null);
@@ -48,16 +42,19 @@ export default function WorkshopRegistrationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-5 shadow-xl sm:max-w-lg sm:p-6">
+      <div className="w-full max-w-md rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-5 shadow-xl sm:max-w-lg sm:p-6">
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-base font-semibold text-brand-navy sm:text-lg">Confirm Registration</h2>
+          <div>
+            <h2 className="text-base font-semibold text-white sm:text-lg">Confirm Registration</h2>
+            <p className="text-xs text-brand-muted mt-0.5">Enroll your account in this workshop cohort</p>
+          </div>
           <button
             onClick={handleClose}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-brand-muted transition hover:bg-white/10 hover:text-white"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -65,18 +62,21 @@ export default function WorkshopRegistrationModal({
             </svg>
           </button>
         </div>
-        <p className="text-sm text-zinc-600">
-          Register for &ldquo;{workshop?.title}&rdquo;? This will enroll your account in this workshop.
-        </p>
+
+        <div className="glass-card !p-4 mb-4">
+          <p className="text-sm text-brand-muted">
+            Register for <span className="text-white font-medium">"{workshop?.title}"</span>? This will enroll your account in this workshop cohort.
+          </p>
+        </div>
 
         {status && (
           <div
-            className={`mt-4 rounded-lg px-3 py-2 text-sm ${
+            className={`mb-4 rounded-xl px-3 py-2 text-sm ${
               status.type === "success"
-                ? "bg-green-50 text-green-800"
+                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                 : status.type === "conflict"
-                ? "bg-orange-50 text-brand-orange"
-                : "bg-red-50 text-red-700"
+                ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                : "bg-red-500/10 text-red-400 border border-red-500/20"
             }`}
             role="alert"
           >
@@ -84,19 +84,23 @@ export default function WorkshopRegistrationModal({
           </div>
         )}
 
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:gap-3">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-3">
           <button
             onClick={handleClose}
-            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            className="w-full btn-ghost"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-600 disabled:opacity-50"
+            className="w-full btn-primary disabled:opacity-50"
           >
-            {submitting ? "Registering…" : "Confirm & Register"}
+            {submitting ? (
+              <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Registering…</>
+            ) : (
+              "Confirm & Register"
+            )}
           </button>
         </div>
       </div>

@@ -147,16 +147,16 @@ export default function WorkshopDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-brand-bg px-6">
-        <p className="text-sm text-zinc-500">Loading workshop…</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-bg px-6">
+        <p className="text-sm text-brand-muted">Loading workshop…</p>
       </div>
     );
   }
 
   if (!workshop) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-brand-bg px-6">
-        <p className="text-sm text-zinc-500">{error || "Workshop not found."}</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-bg px-6">
+        <p className="text-sm text-brand-muted">{error || "Workshop not found."}</p>
       </div>
     );
   }
@@ -174,181 +174,208 @@ export default function WorkshopDetail() {
     : "TBD";
 
   return (
-    <main className="min-h-[calc(100vh-56px)] bg-brand-bg px-6 py-12">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-4">
+    <div className="min-h-screen animate-fade-in">
+      <div className="border-b border-brand-border bg-brand-glass backdrop-blur-glass">
+        <div className="px-6 py-3">
+          <span className="text-sm text-brand-muted">BCC Integrated Information System</span>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="mx-auto max-w-4xl">
           <button
             onClick={() => navigate("/workshops")}
-            className="text-sm text-zinc-600 hover:text-brand-navy"
+            className="mb-4 flex items-center gap-1 text-sm text-brand-muted hover:text-white transition-colors"
           >
-            ← Back to workshops
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to workshops
           </button>
-        </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-brand-navy-gradient p-6 text-white shadow-sm mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">{workshop.title}</h1>
-              <div className="mt-1 flex flex-wrap items-center gap-4 text-sm text-zinc-300">
-                {workshop.speaker_name && <span>Speaker: {workshop.speaker_name}</span>}
-                <span>📅 {formattedDate}</span>
-                {workshop.location && <span>📍 {workshop.location}</span>}
-              </div>
-            </div>
-            {isAdmin && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigate(`/admin/workshops/${workshop.id}/attendance`)}
-                  className="rounded-lg bg-brand-orange px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-600"
-                >
-                  Manage Attendance
-                </button>
-                <button
-                  onClick={() => navigate(`/admin/create-workshop/${workshop.id}/edit`)}
-                  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-brand-navy transition hover:bg-zinc-100"
-                >
-                  Edit Workshop
-                </button>
-              </div>
-            )}
-          </div>
-          {workshop.description && (
-            <p className="mt-3 text-sm text-zinc-200">{workshop.description}</p>
-          )}
-        </div>
-
-        {!isAuthenticated && (
-          <div className="mb-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-brand-navy mb-2">Student Access</h2>
-            <p className="mb-4 text-sm text-zinc-600">Enter your NIM to register, mark attendance, or access materials.</p>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="text"
-                value={publicNim}
-                onChange={(e) => setPublicNim(e.target.value)}
-                placeholder="Enter your NIM"
-                className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handlePublicRegister}
-                  disabled={publicNimLoading}
-                  className="w-full rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600 disabled:opacity-50 sm:w-auto"
-                >
-                  {publicNimLoading ? "Submitting…" : "Register"}
-                </button>
-                <button
-                  onClick={handlePublicAttendance}
-                  disabled={publicNimLoading}
-                  className="w-full rounded-lg bg-brand-orange px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-600 disabled:opacity-50 sm:w-auto"
-                >
-                  {publicNimLoading ? "Submitting…" : "Mark Attendance"}
-                </button>
-                <button
-                  onClick={handlePublicMaterials}
-                  disabled={publicNimLoading}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-brand-navy transition hover:bg-zinc-50 disabled:opacity-50 sm:w-auto"
-                >
-                  View Materials
-                </button>
-              </div>
-            </div>
-
-            {publicNimError && (
-              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-                {publicNimError}
-              </div>
-            )}
-            {publicNimMessage && publicNimMessage.type === "success" && (
-              <div className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700" role="status">
-                {publicNimMessage.text}
-              </div>
-            )}
-          </div>
-        )}
-
-        {isAuthenticated && (
-          <div className="mb-8 flex gap-3">
-            {!isRegistered ? (
-              <button
-                onClick={() => setModalOpen(true)}
-                className="rounded-lg bg-brand-blue px-6 py-2.5 text-sm font-medium text-white transition hover:bg-sky-600"
-              >
-                Register for this Workshop
-              </button>
-            ) : (
-              <button
-                onClick={loadMaterials}
-                className="rounded-lg bg-brand-blue px-6 py-2.5 text-sm font-medium text-white transition hover:bg-sky-600"
-              >
-                View Course Materials
-              </button>
-            )}
-          </div>
-        )}
-
-        {materials && (
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm mb-8">
-            <h2 className="section-heading text-lg mb-4">Course Materials</h2>
-
-            {materials.verified ? (
-              <div className="mb-4">
-                <span className="verified-badge">✓ Verified Student Access Granted</span>
-              </div>
-            ) : (
-              <div className="mb-4 text-sm text-zinc-600">
-                Materials not available — registration not verified.
-              </div>
-            )}
-
-            {materials.verified && materials.materials.length === 0 ? (
-              <p className="text-sm text-zinc-500">No materials have been uploaded yet.</p>
-            ) : (
-              materials.verified && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {materials.materials.map((m) => (
-                    <a
-                      key={m.id}
-                      href={m.file_url}
-                      download
-                      className="group flex items-start gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 transition hover:border-brand-blue hover:bg-white"
-                    >
-                      <div className="flex-shrink-0 rounded-lg bg-white p-2">
-                        <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0 flex-1 overflow-x-auto">
-                        <span className="block whitespace-nowrap font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
-                          {m.title}
-                        </span>
-                        <span className="block text-xs text-zinc-500">
-                          Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
-                        </span>
-                      </div>
-                      <span className="flex-shrink-0 text-xs text-zinc-400">Download</span>
-                    </a>
-                  ))}
+          <div className="card-accent mb-8">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-white">{workshop.title}</h1>
+                <div className="mt-1 flex flex-wrap items-center gap-4 text-sm text-brand-muted">
+                  {workshop.speaker_name && <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    {workshop.speaker_name}
+                  </span>}
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    {formattedDate}
+                  </span>
+                  {workshop.location && <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                    {workshop.location}
+                  </span>}
                 </div>
-              )
+              </div>
+              {isAdmin && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/admin/workshops/${workshop.id}/attendance`)}
+                    className="btn-secondary text-xs"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                    Manage Attendance
+                  </button>
+                  <button
+                    onClick={() => navigate(`/admin/create-workshop/${workshop.id}/edit`)}
+                    className="btn-ghost text-xs"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+            {workshop.description && (
+              <p className="mt-3 text-sm text-brand-muted">{workshop.description}</p>
             )}
-          </section>
-        )}
-
-        {materialsError && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-            {materialsError}
           </div>
-        )}
 
-        <WorkshopRegistrationModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          workshop={workshop}
-          token={token}
-          onRegistered={handleRegistered}
-        />
+          {!isAuthenticated && (
+            <div className="mb-8 glass-card !p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blue/20">
+                  <svg className="h-4 w-4 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-white">Student Access</h2>
+                  <p className="text-xs text-brand-muted">Enter your NIM to register, mark attendance, or access materials.</p>
+                </div>
+              </div>
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="text"
+                  value={publicNim}
+                  onChange={(e) => setPublicNim(e.target.value)}
+                  placeholder="Enter your NIM"
+                  className="input-dark flex-1"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePublicRegister}
+                    disabled={publicNimLoading}
+                    className="btn-primary disabled:opacity-50"
+                  >
+                    {publicNimLoading ? "Submitting…" : "Register"}
+                  </button>
+                  <button
+                    onClick={handlePublicAttendance}
+                    disabled={publicNimLoading}
+                    className="btn-secondary disabled:opacity-50"
+                  >
+                    Mark Attendance
+                  </button>
+                  <button
+                    onClick={handlePublicMaterials}
+                    disabled={publicNimLoading}
+                    className="btn-ghost disabled:opacity-50"
+                  >
+                    View Materials
+                  </button>
+                </div>
+              </div>
+
+              {publicNimError && (
+                <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
+                  {publicNimError}
+                </div>
+              )}
+              {publicNimMessage && publicNimMessage.type === "success" && (
+                <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400 border border-emerald-500/20" role="status">
+                  {publicNimMessage.text}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isAuthenticated && (
+            <div className="mb-8">
+              {!isRegistered ? (
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="btn-primary"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Register for this Workshop
+                </button>
+              ) : (
+                <button
+                  onClick={loadMaterials}
+                  className="btn-primary"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                  View Course Materials
+                </button>
+              )}
+            </div>
+          )}
+
+          {materials && (
+            <div className="mb-8 glass-card !p-6">
+              <h2 className="section-heading text-lg mb-4">Course Materials</h2>
+
+              {materials.verified ? (
+                <div className="mb-4">
+                  <span className="verified-badge">✓ Verified Student Access Granted</span>
+                </div>
+              ) : (
+                <div className="mb-4 text-sm text-brand-muted">
+                  Materials not available — registration not verified.
+                </div>
+              )}
+
+              {materials.verified && materials.materials.length === 0 ? (
+                <p className="text-sm text-brand-muted">No materials have been uploaded yet.</p>
+              ) : (
+                materials.verified && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {materials.materials.map((m) => (
+                      <a
+                        key={m.id}
+                        href={m.file_url}
+                        download
+                        className="group flex items-start gap-3 rounded-xl border border-brand-border bg-white/5 p-3 text-sm text-brand-muted transition hover:border-brand-blue hover:bg-white/10"
+                      >
+                        <div className="flex-shrink-0 rounded-lg bg-white/5 p-2">
+                          <svg className="h-5 w-5 text-brand-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="block truncate font-medium text-white group-hover:text-brand-blue" title={m.title}>
+                            {m.title}
+                          </span>
+                          <span className="block text-xs text-brand-muted">
+                            Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
+                          </span>
+                        </div>
+                        <span className="flex-shrink-0 text-xs text-brand-muted">Download</span>
+                      </a>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {materialsError && (
+            <div className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
+              {materialsError}
+            </div>
+          )}
+
+          <WorkshopRegistrationModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            workshop={workshop}
+            token={token}
+            onRegistered={handleRegistered}
+          />
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

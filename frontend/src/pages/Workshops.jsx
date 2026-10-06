@@ -5,12 +5,6 @@ import { fetchWorkshops, deleteWorkshop } from "../lib/api.js";
 import WorkshopCard from "../components/WorkshopCard.jsx";
 import WorkshopRegistrationModal from "../components/WorkshopRegistrationModal.jsx";
 
-/**
- * Workshops page — public catalog of all workshops.
- * Authenticated students can register; admins can create/edit/delete.
- * Brand design: light neutral bg, navy headers, orange category pills,
- * blue Register/View Details CTA buttons.
- */
 export default function Workshops() {
   const { isAuthenticated, token, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -19,7 +13,6 @@ export default function Workshops() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
 
-  // Registration modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
 
@@ -69,51 +62,58 @@ export default function Workshops() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-brand-bg px-6">
-        <p className="text-sm text-zinc-500">Checking authentication…</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-bg px-6">
+        <p className="text-sm text-brand-muted">Checking authentication…</p>
       </div>
     );
   }
 
   return (
-    <main className="min-h-[calc(100vh-56px)] bg-brand-bg px-6 py-12">
-      <div className="mx-auto max-w-6xl">
-        {/* Section header — Dark Navy with Orange/Coral category pill */}
+    <div className="min-h-screen animate-fade-in">
+      <div className="border-b border-brand-border bg-brand-glass backdrop-blur-glass">
+        <div className="px-6 py-3">
+          <span className="text-sm text-brand-muted">BCC Integrated Information System</span>
+        </div>
+      </div>
+
+      <div className="p-6">
         <div className="mb-8 flex items-baseline justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-brand-navy">Workshops</h1>
+              <h1 className="section-heading">Workshops</h1>
               <span className="category-pill">BCC Events</span>
             </div>
-            <p className="section-subheading">Upcoming events organized by BCC</p>
+            <p className="section-subheading mt-1">Upcoming events organized by BCC</p>
           </div>
           {isAdmin && (
             <button
               onClick={() => navigate("/admin/create-workshop")}
-              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+              className="btn-primary"
             >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               + New Workshop
             </button>
           )}
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <div className="mb-6 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
             {error}
           </div>
         )}
 
         {loading || workshops === null ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-zinc-500">Loading workshops…</p>
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-brand-blue border-t-transparent" />
+            <p className="text-sm text-brand-muted">Loading workshops…</p>
           </div>
         ) : workshops.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-zinc-500">No workshops available yet.</p>
+            <p className="text-sm text-brand-muted">No workshops available yet.</p>
             {isAdmin && (
               <button
                 onClick={() => navigate("/admin/create-workshop")}
-                className="mt-3 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+                className="mt-3 btn-primary"
               >
                 Create the first workshop
               </button>
@@ -136,7 +136,6 @@ export default function Workshops() {
         )}
       </div>
 
-      {/* Registration Modal */}
       {modalOpen && selectedWorkshop && (
         <WorkshopRegistrationModal
           isOpen={modalOpen}
@@ -146,6 +145,6 @@ export default function Workshops() {
           onRegistered={loadWorkshops}
         />
       )}
-    </main>
+    </div>
   );
 }

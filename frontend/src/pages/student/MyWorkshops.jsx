@@ -7,11 +7,6 @@ import {
   fetchMaterials,
 } from "../../lib/api.js";
 
-/**
- * Student dashboard — tabbed view of all workshops and enrolled workshops.
- * Uses brand design: navy welcome banner, orange "Enrolled" badges,
- * blue "View Course Materials" buttons, blue verified access badge.
- */
 export default function MyWorkshops() {
   const { user, token, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
@@ -21,7 +16,6 @@ export default function MyWorkshops() {
   const [error, setError] = useState("");
   const [registeringId, setRegisteringId] = useState(null);
 
-  // Materials modal state
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [materialsData, setMaterialsData] = useState(null);
   const [materialsLoading, setMaterialsLoading] = useState(false);
@@ -61,7 +55,6 @@ export default function MyWorkshops() {
       loadEnrolledWorkshops();
     } catch (err) {
       if (err.message.includes("409") || err.message.includes("already registered")) {
-        // Already registered — silently refresh
         loadEnrolledWorkshops();
       } else {
         setError(err.message);
@@ -94,34 +87,44 @@ export default function MyWorkshops() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-brand-bg px-6">
-        <p className="text-sm text-zinc-500">Please log in to view your dashboard.</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-bg px-6">
+        <p className="text-sm text-brand-muted">Please log in to view your dashboard.</p>
       </div>
     );
   }
 
   return (
-    <main className="min-h-[calc(100vh-56px)] bg-brand-bg px-6 py-12">
-      <div className="mx-auto max-w-6xl">
-        {/* Dark Navy Welcome Banner */}
-        <div className="mb-8 rounded-xl border border-zinc-200 bg-brand-navy-gradient p-6 text-white shadow-sm">
-          <h1 className="text-2xl font-bold">Welcome, {user?.email}</h1>
-          {user?.nim && (
-            <p className="mt-1 text-sm text-zinc-300">NIM: {user.nim}</p>
-          )}
-          {user?.role && (
-            <p className="mt-1 text-xs text-zinc-400">Role: {user.role}</p>
-          )}
+    <div className="min-h-screen animate-fade-in">
+      <div className="border-b border-brand-border bg-brand-glass backdrop-blur-glass">
+        <div className="px-6 py-3 flex items-center justify-between">
+          <span className="text-sm text-brand-muted">Student Dashboard</span>
+          <span className="text-xs text-brand-muted">BCC Integrated Portal</span>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {/* Welcome banner */}
+        <div className="card-accent mb-8 !bg-gradient-to-r !from-brand-navy !to-brand-slate">
+          <h1 className="text-2xl font-bold text-white">Welcome, {user?.email?.split("@")[0] || "Student"}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-brand-muted">
+            {user?.nim && <span className="flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              NIM: {user.nim}
+            </span>}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue">
+              <span className="h-1 w-1 rounded-full bg-brand-blue" /> Active Student
+            </span>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <div className="mb-6 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
             {error}
           </div>
         )}
 
-        {/* Tab Bar — Orange/Coral underline for active tab */}
-        <div className="mb-6 overflow-x-auto border-b border-zinc-200">
+        {/* Tab Bar */}
+        <div className="mb-6 overflow-x-auto border-b border-brand-border">
           <div className="flex min-w-max items-center gap-2">
             <button
               onClick={() => setActiveTab("all")}
@@ -146,32 +149,28 @@ export default function MyWorkshops() {
         {activeTab === "all" && (
           <div>
             {loading || allWorkshops === null ? (
-              <p className="text-sm text-zinc-500">Loading workshops…</p>
+              <p className="text-sm text-brand-muted">Loading workshops…</p>
             ) : allWorkshops.length === 0 ? (
-              <p className="text-sm text-zinc-500">No workshops available yet.</p>
+              <p className="text-sm text-brand-muted">No workshops available yet.</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {allWorkshops.map((w) => {
                   const isRegistered = enrolledWorkshops?.some((e) => e.id === w.id);
                   return (
-                    <div
-                      key={w.id}
-                      className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
-                    >
+                    <div key={w.id} className="card-accent">
                       <div className="mb-2 flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-brand-navy">{w.title}</h3>
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-brand-blue">
+                        <h3 className="text-base font-semibold text-white">{w.title}</h3>
+                        <span className="inline-flex items-center rounded-full bg-brand-blue/20 px-2 py-0.5 text-xs font-medium text-brand-blue">
                           {w.registration_count} registered
                         </span>
                       </div>
-                      <p className="mb-2 line-clamp-2 text-sm text-zinc-600">
+                      <p className="mb-2 line-clamp-2 text-sm text-brand-muted">
                         {w.description || "No description provided."}
                       </p>
                       {w.speaker_name && (
-                        <p className="mb-1 text-sm text-zinc-700">Speaker: {w.speaker_name}</p>
+                        <p className="mb-1 text-sm text-brand-muted">Speaker: {w.speaker_name}</p>
                       )}
-                      <p className="mb-3 text-sm text-zinc-700">
-                        📅{" "}
+                      <p className="mb-3 text-sm text-brand-muted">
                         {w.event_date
                           ? new Date(w.event_date).toLocaleDateString("en-US", {
                               month: "short",
@@ -185,21 +184,18 @@ export default function MyWorkshops() {
                           <button
                             onClick={() => handleRegister(w.id)}
                             disabled={registeringId === w.id}
-                            className="rounded-lg bg-brand-blue px-4 py-1.5 text-sm font-medium text-white transition hover:bg-sky-600 disabled:opacity-50"
+                            className="btn-primary disabled:opacity-50"
                           >
                             {registeringId === w.id ? "Registering…" : "Register"}
                           </button>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-orange">
+                          <span className="inline-flex items-center rounded-full bg-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue">
                             Enrolled
                           </span>
                         )}
-                        <button
-                          onClick={() => openMaterials(w.id)}
-                          className="rounded-lg border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-brand-navy transition hover:bg-zinc-50"
-                        >
+                        <Link to={`/workshops/${w.id}`} className="btn-ghost">
                           View Details
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   );
@@ -213,15 +209,15 @@ export default function MyWorkshops() {
         {activeTab === "enrolled" && (
           <div>
             {loading ? (
-              <p className="text-sm text-zinc-500">Loading your workshops…</p>
+              <p className="text-sm text-brand-muted">Loading your workshops…</p>
             ) : !enrolledWorkshops || enrolledWorkshops.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-brand-muted">
                   You haven't enrolled in any workshops yet.
                 </p>
                 <button
                   onClick={() => setActiveTab("all")}
-                  className="mt-3 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+                  className="mt-3 btn-primary"
                 >
                   Browse All Workshops
                 </button>
@@ -229,24 +225,20 @@ export default function MyWorkshops() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {enrolledWorkshops.map((w) => (
-                  <div
-                    key={w.id}
-                    className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
-                  >
+                  <div key={w.id} className="card-accent">
                     <div className="mb-2 flex items-start justify-between">
-                      <h3 className="text-lg font-semibold text-brand-navy">{w.title}</h3>
-                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-brand-orange">
+                      <h3 className="text-base font-semibold text-white">{w.title}</h3>
+                      <span className="inline-flex items-center rounded-full bg-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue">
                         Enrolled
                       </span>
                     </div>
-                    <p className="mb-2 text-sm text-zinc-600">
+                    <p className="mb-2 text-sm text-brand-muted">
                       {w.description || "No description provided."}
                     </p>
                     {w.speaker_name && (
-                      <p className="mb-1 text-sm text-zinc-700">Speaker: {w.speaker_name}</p>
+                      <p className="mb-1 text-sm text-brand-muted">Speaker: {w.speaker_name}</p>
                     )}
-                    <p className="mb-1 text-sm text-zinc-700">
-                      📅{" "}
+                    <p className="mb-1 text-sm text-brand-muted">
                       {w.event_date
                         ? new Date(w.event_date).toLocaleDateString("en-US", {
                             month: "short",
@@ -254,24 +246,25 @@ export default function MyWorkshops() {
                             year: "numeric",
                           })
                         : "TBD"}
-                      • 📍 {w.location}
+                      {w.location && <span> · 📍 {w.location}</span>}
                     </p>
                     {w.attended ? (
-                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                         Attended {w.attended_at ? new Date(w.attended_at).toLocaleDateString() : ""}
                       </div>
                     ) : (
-                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                      <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-zinc-500/20 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
                         Not yet attended
                       </div>
                     )}
                     <button
                       onClick={() => openMaterials(w.id)}
-                      className="w-full rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+                      className="w-full btn-primary"
                     >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                       View Course Materials
                     </button>
                   </div>
@@ -285,16 +278,16 @@ export default function MyWorkshops() {
       {/* Materials Modal */}
       {materialsOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-200 bg-white p-4 shadow-xl sm:max-w-2xl md:p-6">
+          <div className="w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-brand-border bg-brand-card backdrop-blur-glass p-4 shadow-xl sm:max-w-2xl md:p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-brand-navy sm:text-lg">Course Materials</h2>
+              <h2 className="text-base font-semibold text-white sm:text-lg">Course Materials</h2>
               <button
                 onClick={closeMaterials}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-muted transition hover:bg-white/10 hover:text-white"
                 aria-label="Close"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -306,12 +299,12 @@ export default function MyWorkshops() {
             {materialsLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-blue border-t-transparent" />
-                <p className="ml-3 text-sm text-zinc-500">Loading materials…</p>
+                <p className="ml-3 text-sm text-brand-muted">Loading materials…</p>
               </div>
             )}
 
             {materialsError && (
-              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+              <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400 border border-red-500/20" role="alert">
                 {materialsError}
               </div>
             )}
@@ -319,24 +312,24 @@ export default function MyWorkshops() {
             {materialsData && (
               <div>
                 {materialsData.verified ? (
-                  <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-medium text-brand-blue">
+                  <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-brand-blue/20 px-3 py-1.5 text-xs font-medium text-brand-blue">
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                     Verified Student Access Granted
                   </div>
                 ) : (
-                  <div className="mb-4 rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+                  <div className="mb-4 rounded-lg bg-zinc-500/10 px-3 py-2 text-sm text-brand-muted">
                     Materials not available — registration not verified.
                   </div>
                 )}
 
                 {materialsData.verified && materialsData.materials.length === 0 ? (
                   <div className="py-8 text-center">
-                    <svg className="mx-auto h-10 w-10 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="mx-auto h-10 w-10 text-brand-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                     </svg>
-                    <p className="mt-2 text-sm text-zinc-500">No materials uploaded yet.</p>
+                    <p className="mt-2 text-sm text-brand-muted">No materials uploaded yet.</p>
                   </div>
                 ) : (
                   materialsData.verified && (
@@ -346,22 +339,22 @@ export default function MyWorkshops() {
                           key={m.id}
                           href={m.file_url}
                           download
-                          className="group flex items-start gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 transition hover:border-brand-blue hover:bg-white"
+                          className="group flex items-start gap-3 rounded-xl border border-brand-border bg-white/5 p-3 text-sm text-brand-muted transition hover:border-brand-blue hover:bg-white/10"
                         >
-                          <div className="flex-shrink-0 rounded-lg bg-white p-2">
-                            <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <div className="flex-shrink-0 rounded-lg bg-white/5 p-2">
+                            <svg className="h-5 w-5 text-brand-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V11.25m8.625-9.75h2.25c.621 0 1.125.504 1.125 1.125v2.25m-13.5 0h13.5m-13.5 0L9 15m3.75-6v6" />
                             </svg>
                           </div>
                            <div className="min-w-0 flex-1 overflow-x-auto">
-                             <span className="block whitespace-nowrap font-medium text-brand-navy group-hover:text-brand-blue" title={m.title}>
-                               {m.title}
-                             </span>
-                             <span className="block text-xs text-zinc-500">
-                               Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
-                             </span>
-                           </div>
-                          <span className="flex-shrink-0 text-xs text-zinc-400">Download</span>
+                              <span className="block truncate font-medium text-white group-hover:text-brand-blue" title={m.title}>
+                                {m.title}
+                              </span>
+                              <span className="block text-xs text-brand-muted">
+                                Uploaded {new Date(m.uploaded_at).toLocaleDateString("en-US")}
+                              </span>
+                            </div>
+                          <span className="flex-shrink-0 text-xs text-brand-muted">Download</span>
                         </a>
                       ))}
                     </div>
@@ -372,13 +365,13 @@ export default function MyWorkshops() {
 
             <button
               onClick={closeMaterials}
-              className="mt-4 w-full rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-600"
+              className="mt-4 w-full btn-primary"
             >
               Close
             </button>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }
