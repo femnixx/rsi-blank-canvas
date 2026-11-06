@@ -9,6 +9,7 @@ import workshopRoutes from "./routes/workshops.js";
 import studentRoutes from "./routes/student.js";
 import registrationRoutes from "./routes/registration.js";
 import attendanceRoutes from "./routes/attendance.js";
+import adminAttendanceRoutes from "./routes/adminAttendance.js";
 import { initDb, pool } from "./db.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -45,6 +46,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api", registrationRoutes);
 // Spec-aligned attendance endpoint (Phase 3)
 app.use("/api", attendanceRoutes);
+// Spec-aligned admin verification/finalize (Phase 4)
+app.use("/api", adminAttendanceRoutes);
 
 // Legacy workshop routes (admin create, materials, attendance management - to be migrated Phase 3-5)
 app.use("/api/workshops", workshopRoutes);

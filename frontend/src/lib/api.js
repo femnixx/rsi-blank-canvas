@@ -86,9 +86,7 @@ export async function registerParticipantByNim(workshopId, nim) {
   return processRegistration(workshopId, nim);
 }
 
-export async function fetchWorkshopRegistrations(workshopId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/registrations`, { token });
-}
+// fetchWorkshopRegistrations — moved to Phase 4 attendance section (admin snapshot)
 
 // --- Public NIM-based access ---
 
@@ -138,23 +136,31 @@ export async function deleteMaterial(workshopId, materialId, token) {
   });
 }
 
-// --- Attendance API ---
-
-export async function markAttendance(workshopId, registrationId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/attendance`, {
-    method: "POST",
-    body: { registration_id: registrationId },
-    token,
-  });
+// --- Attendance/Verification API (Phase 3/4 spec) ---
+export async function markAttendance(workshopId, nim, token) {
+  return apiFetch(`/api/workshops/${workshopId}/attendance`, { method: "POST", body: { nim }, token });
 }
 
 export async function fetchWorkshopAttendance(workshopId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/attendance`, { token });
+  return apiFetch(`/api/admin/workshops/${workshopId}/attendance`, { token });
 }
 
-export async function deleteAttendance(workshopId, attendanceId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/attendance/${attendanceId}`, {
-    method: "DELETE",
-    token,
-  });
+export async function fetchWorkshopRegistrations(workshopId, token) {
+  return fetchWorkshopAttendance(workshopId, token);
+}
+
+export async function updateAttendanceEntry(attendanceId, action, token) {
+  return apiFetch(`/api/admin/attendance/${attendanceId}`, { method: "PATCH", body: { action }, token });
+}
+
+export async function deleteAttendance(_workshopId, attendanceId, token) {
+  return updateAttendanceEntry(attendanceId, "remove", token);
+}
+
+export async function finalizeWorkshopAttendance(workshopId, token) {
+  return apiFetch(`/api/admin/workshops/${workshopId}/attendance/finalize`, { method: "POST", token });
+}
+
+export async function cancelAttendanceFinalization(workshopId, token) {
+  return apiFetch(`/api/admin/workshops/${workshopId}/attendance/cancel-finalization`, { method: "POST", token });
 }
