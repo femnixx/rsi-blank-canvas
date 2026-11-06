@@ -110,8 +110,13 @@ export async function fetchMyWorkshops(token) {
 
 // --- Materials API ---
 
-export async function fetchMaterials(workshopId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/materials`, { token });
+export async function fetchMaterials(workshopId, tokenOrNim) {
+  // Phase 5 spec: materials are NIM-gated; token path kept for compat by using nim query if passed.
+  if (tokenOrNim && !tokenOrNim.includes(".")) { // looks like NIM
+    return apiFetch(`/api/workshops/${workshopId}/materials?nim=${encodeURIComponent(tokenOrNim)}`);
+  }
+  // if token provided we cannot derive NIM here; prefer explicit NIM in UI. fallback to public param-less will fail safely.
+  return apiFetch(`/api/workshops/${workshopId}/materials`);
 }
 
 export async function addMaterial(workshopId, formData, token) {

@@ -3,10 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   fetchWorkshop,
-  registerParticipant,
-  fetchMaterials,
-  registerParticipantByNim,
   fetchMaterialsByNim,
+  registerParticipantByNim,
   markAttendanceByNim,
 } from "../lib/api.js";
 import WorkshopRegistrationModal from "../components/WorkshopRegistrationModal.jsx";
@@ -39,7 +37,8 @@ export default function WorkshopDetail() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      checkRegistration();
+      // spec: registration/material verification is NIM-based; avoid calling NIM-gated endpoint without NIM.
+      setIsRegistered(false);
     }
   }, [isAuthenticated, id, workshop]);
 
@@ -57,15 +56,9 @@ export default function WorkshopDetail() {
   }
 
   async function checkRegistration() {
-    setRegistrationChecking(true);
-    try {
-      const data = await fetchMaterials(id, token);
-      setIsRegistered(data.verified);
-    } catch (err) {
-      setIsRegistered(false);
-    } finally {
-      setRegistrationChecking(false);
-    }
+    // Spec: verification is NIM/roster-based. Auth token alone is insufficient for NIM-gated material endpoint.
+    setIsRegistered(false);
+    setRegistrationChecking(false);
   }
 
   async function loadMaterials() {
@@ -73,12 +66,16 @@ export default function WorkshopDetail() {
     setMaterialsError("");
     setMaterials(null);
     try {
-      const data = await fetchMaterials(id, token);
+      const nim = publicNim?.trim() || "";
       if (isAdmin) {
-        setMaterials({ ...data, verified: true });
-      } else {
-        setMaterials(data);
+        // Admins may view via any known context; spec has no admin material endpoint — show info.
+        setMaterials({ verified: true, materials: [], adminNote: true });
+        return;
       }
+      if (!nim) { setMaterialsError("Enter your NIM to view materials (spec access control)."); return; }
+      const data = await fetchMaterialsByNim(id, nim);
+      setMaterials(data);
+      setIsRegistered(!!data.verified);
     } catch (err) {
       setMaterialsError(err.message);
     } finally {
@@ -299,23 +296,12 @@ export default function WorkshopDetail() {
 
           {isAuthenticated && (
             <div className="mb-8">
-              {!isRegistered ? (
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="btn-primary"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Register for this Workshop
-                </button>
-              ) : (
-                <button
-                  onClick={loadMaterials}
-                  className="btn-primary"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                  View Course Materials
-                </button>
-              )}
+              <p className="mb-2 text-xs text-brand-muted">Spec access: enter NIM to verify roster and view materials.</p>
+              <div className="flex gap-2 mb-3">
+                <input type="text" value={publicNim} onChange={(e) => setPublicNim(e.target.value)} placeholder="NIM" className="input-dark max-w-xs" />
+                <button onClick={loadMaterials} className="btn-primary">View Course Materials</button>
+              </div>
+              <button onClick={() => setModalOpen(true)} className="btn-ghost">Register for this Workshop</button>
             </div>
           )}
 
