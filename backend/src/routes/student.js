@@ -2,40 +2,23 @@ import express from "express";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireStudent } from "../middleware/admin.js";
+import { ParticipationController } from "../controllers/ParticipationController.js";
 
 const router = express.Router();
+const sendErr = (res, err) => res.status(err.status || 500).json({ code: err.code || "INTERNAL", message: err.message });
 
-/**
- * GET /api/student/my-workshops
- * Student Only (requireAuth, requireStudent). Fetch workshops where the
- * authenticated student is enrolled, including material counts and attendance status.
- */
+// Compat: student dashboard (spec-backed)
 router.get("/my-workshops", requireAuth, requireStudent, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        w.id, w.title, w.description, w.speaker_name,
-        w.event_date, w.location, w.created_at,
-        r.id AS registration_id,
-        r.student_nim,
-        r.registration_date,
-        COUNT(m.id) AS material_count,
-        CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS attended,
-        a.checked_in_at AS attended_at
-      FROM workshops w
-      JOIN workshop_registrations r ON r.workshop_id = w.id
-      LEFT JOIN workshop_materials m ON m.workshop_id = w.id
-      LEFT JOIN workshop_attendance a ON a.workshop_id = w.id AND a.user_id = $1
-      WHERE r.user_id = $1
-      GROUP BY w.id, r.id, a.id, a.checked_in_at
-      ORDER BY w.event_date DESC
-    `, [req.user.id]);
-
-    return res.json({ workshops: result.rows });
-  } catch (err) {
-    console.error("[student my-workshops] error:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
+    const data = await ParticipationController.requestParticipationHistory(req.user.nim);
+    const workshops = data.history.map((h) => ({
+      id: h.workshop_id, workshop_id: h.workshop_id, title: h.title,
+      event_date: h.scheduleDate, location: h.location,
+      registration_id: h.registration_id, status: h.status,
+      attended: !!h.attendance, attended_at: h.attendance?.checkedInAt || null,
+    }));
+    res.json({ workshops, profile: data.profile });
+  } catch (err) { sendErr(res, err); }
 });
 
 export default router;
