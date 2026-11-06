@@ -313,6 +313,7 @@ router.post("/:id/materials", requireAuth, requireAdmin, upload.array("files", 1
  * GET /api/workshops/:id/materials
  * Authenticated. Check if the logged-in student is registered for this workshop.
  * If verified, return the list of materials; otherwise 403 Forbidden.
+ * Admins can access materials without registration.
  */
 router.get("/:id/materials", requireAuth, async (req, res) => {
   try {
@@ -321,17 +322,22 @@ router.get("/:id/materials", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
-    const regCheck = await pool.query(
-      `SELECT id FROM workshop_registrations
-       WHERE workshop_id = $1 AND user_id = $2`,
-      [req.params.id, req.user.id]
-    );
+    // Admins can access materials without registration
+    const isAdmin = req.user.role === "admin";
 
-    if (regCheck.rows.length === 0) {
-      return res.status(403).json({
-        message: "You must be a registered participant to access materials",
-        verified: false,
-      });
+    if (!isAdmin) {
+      const regCheck = await pool.query(
+        `SELECT id FROM workshop_registrations
+         WHERE workshop_id = $1 AND user_id = $2`,
+        [req.params.id, req.user.id]
+      );
+
+      if (regCheck.rows.length === 0) {
+        return res.status(403).json({
+          message: "You must be a registered participant to access materials",
+          verified: false,
+        });
+      }
     }
 
     const result = await pool.query(

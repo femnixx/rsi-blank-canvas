@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
-import {
-  fetchWorkshops,
-  fetchMyWorkshops,
-  registerParticipant,
-  fetchMaterials,
-} from "../../lib/api.js";
+import { fetchWorkshops, fetchMyWorkshops, processRegistration, fetchMaterials } from "../../lib/api.js";
 
 export default function MyWorkshops() {
   const { user, token, isAuthenticated } = useAuth();
@@ -51,14 +47,11 @@ export default function MyWorkshops() {
   async function handleRegister(workshopId) {
     setRegisteringId(workshopId);
     try {
-      await registerParticipant(workshopId, token);
+      await processRegistration(workshopId, user?.nim);
       loadEnrolledWorkshops();
     } catch (err) {
-      if (err.message.includes("409") || err.message.includes("already registered")) {
-        loadEnrolledWorkshops();
-      } else {
-        setError(err.message);
-      }
+      if ((err.message || "").includes("DUPLICATE") || err.message.includes("409")) loadEnrolledWorkshops();
+      else setError(err.message);
     } finally {
       setRegisteringId(null);
     }

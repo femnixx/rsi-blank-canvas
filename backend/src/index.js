@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.js";
 import workshopRoutes from "./routes/workshops.js";
 import studentRoutes from "./routes/student.js";
+import registrationRoutes from "./routes/registration.js";
 import { initDb, pool } from "./db.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -29,31 +30,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, "..", "uploads");
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, unique + ext);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const allowed = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".zip", ".png", ".jpg", ".jpeg"];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Unsupported file type"));
-    }
-  },
-});
-
 app.use("/uploads", express.static(uploadsDir));
 
 // Health check
@@ -64,10 +40,13 @@ app.get("/api/health", (req, res) => {
 // Auth routes (public + protected /me)
 app.use("/api/auth", authRoutes);
 
-// Workshop routes (admin create, student register, materials, etc.)
+// Spec-aligned registration/history endpoints (Phase 2)
+app.use("/api", registrationRoutes);
+
+// Legacy workshop routes (admin create, materials, attendance management - to be migrated Phase 3-5)
 app.use("/api/workshops", workshopRoutes);
 
-// Student portal routes
+// Legacy student portal routes
 app.use("/api/student", studentRoutes);
 
 // Example protected route: verifies strict auth
@@ -81,13 +60,16 @@ app.use((req, res) => {
 
 async function start() {
   try {
-    await initDb();
+    // Phase 0: reseed strategy - do NOT auto-drop on every boot; initDb does drop. Use explicit seed.
+    // For dev: run `node src/db.js` init via seed or call initDb carefully.
+    // Here we only ensure connectivity; schema managed by seed/init script.
+    await pool.query("SELECT 1");
     app.listen(PORT, () => {
       console.log(`[server] listening on http://localhost:${PORT}`);
       console.log(`[server] frontend allowed origin: ${FRONTEND_URL}`);
     });
   } catch (err) {
-    console.error("[server] failed to init db:", err);
+    console.error("[server] failed:", err);
     process.exit(1);
   }
 }

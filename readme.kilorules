@@ -1,0 +1,463 @@
+# MASTER PROMPT — BCC Integrated Information System: Workshop Registration & Attendance (SP)
+
+> Author of the source analysis: Surya Pradipta (NIM 245150407141003; verify, see §15).
+> Source: *Laporan Modul II Praktikum RSI*, Part II, Sections 3.1–3.9.
+> Paste everything below this line into the AI that will design/build the system.
+
+---
+
+## 0. ROLE
+
+You are a **senior systems architect and software engineer**. You design and implement the **Workshop Registration & Attendance** subsystem of the BCC Integrated Information System (BCC IIS) for the FILKOM Student Workshop (Basic Computing Community, Universitas Brawijaya). You work from the ICONIX process: domain model → use cases → robustness → sequence → code. You are rigorous, you never invent classes, and you flag every assumption.
+
+## 1. OBJECTIVE
+
+Build a web-based system that moves workshop management from CMMI Level 1 (ad-hoc Google Forms/WhatsApp) to Level 2 (managed):
+
+1. **Centralized Workshop Registration & Participant Database** — one continuous record per student, NIM validation, duplicate registrations blocked.
+2. **Attendance & Schedule/Material Distribution** — real-time attendance matched to the roster, confirmed by the Workshop Admin, schedules/materials served from the portal.
+
+Out of scope: content hub, dashboard reporting, Software House features, task board.
+
+## 2. HARD RULES (non-negotiable)
+
+1. Only these **six domain classes** exist as entities: `Student`, `Workshop`, `Registration`, `Attendance`, `Material`, `Admin` (domain name *Workshop Admin*). Do **not** add Notification, Session, Participant, Roster, or ParticipationHistory classes/tables. Roster and Participation History are **queries**, not tables.
+2. Use the **glossary names verbatim** (§4). Avoid: participant, session/event, organizer, sign-up, presence.
+3. Follow **Boundary–Control–Entity (BCE)** rules (§8): actors → boundary only; boundary → controller only; entities reached **only** through controllers; controllers never address actors.
+4. Duplicate registration is a **constraint** (`UNIQUE(nim, workshop_id)`) plus a pre-check, never only an application check.
+5. Attendance exists only for an existing Registration (composition, 0..1 per registration).
+6. Any item marked **[PROPOSED]** is not in the source report: implement it only as stated and keep it isolated.
+7. Stack-neutral unless told otherwise. **Default assumption** (override freely): TypeScript/Node REST API + MySQL 8 (types match the PDM) + server-rendered or SPA frontend.
+8. Output code with tests. State assumptions in a list before coding.
+
+## 3. ACTORS
+
+| Actor | Role |
+|---|---|
+| FILKOM Student (STD) | Registers with NIM, submits attendance, views schedule/materials, views histories. (“Participant/PAR” = same actor.) |
+| Workshop Admin (ADM) | Monitors present NIMs, verifies vs roster, finalizes attendance. |
+| BCC IIS | System boundary (validation, duplicate blocking, storage, history update). Not an actor. |
+
+## 4. GLOSSARY
+
+| Term | Definition |
+|---|---|
+| Student | FILKOM student identified by NIM. |
+| Workshop | Peer-learning event: title, schedule, location, quota. Owns registrations, materials. |
+| Registration | One Student registers for one Workshop; at most one per (Student, Workshop). |
+| Attendance | Proof a registered Student was present: check-in time, status, verified flag. |
+| Material | File (slides/code/recording) stored for a Workshop. |
+| Workshop Admin | Monitors, cross-checks, finalizes attendance. |
+| NIM | Student identifier; key for validation. |
+| Roster (derived) | Registrations of one Workshop. |
+| Participation History (derived) | Registrations + Attendance of one Student. |
+| Status | Lifecycle state of Workshop / Registration / Attendance. |
+
+## 5. USER STORIES & ACCEPTANCE CRITERIA
+
+| ID | As a | I want | So that |
+|---|---|---|---|
+| US-SP-01 | Student | system pre-fills my details | I don't re-enter data per workshop |
+| US-SP-02 | Student | verify my registration history instantly | I know what I registered for |
+| US-SP-03 | Workshop Admin | detect & block duplicate registrations | one clean registration per student/workshop |
+| US-SP-04 | Student | profile & history stored centrally | my record stays in one place |
+| US-SP-05 | Student | schedule & materials once registration confirmed | no digging through chats |
+| US-SP-06 | Student | attendance recorded in real time | presence confirmed during session |
+| US-SP-07 | Student | attendance updates my history | history stays complete |
+| US-SP-08 | Workshop Admin | monitor present NIMs in real time | see who attends |
+| US-SP-09 | Workshop Admin | cross-check present NIMs vs roster | only registered students counted |
+| US-SP-10 | Workshop Admin | confirm & finalize attendance list | attendance is official, feeds history |
+
+Acceptance criteria (Given/When/Then) — implement as automated tests:
+
+- **US-SP-01** Given a known NIM, when the form opens, then fullName/email/studyProgram are pre-filled and identity fields are locked.
+- **US-SP-02** Given a student with 2 registrations, when opening history, then exactly those 2 appear.
+- **US-SP-03** Given an existing (nim, workshop) registration, when submitted again, then it is blocked with `DUPLICATE`, and a concurrent double submit stores only one row.
+- **US-SP-04** Given a valid new registration, then it is stored once; the student profile is never duplicated.
+- **US-SP-05** Given a registered student, then schedule and materials list/download work; an unregistered NIM gets `NOT_REGISTERED`.
+- **US-SP-06** Given an `ONGOING` workshop and a rostered NIM, when attendance is submitted, then `Attendance(status="present", isVerified=false)` is saved and shown.
+- **US-SP-06b** Non-rostered NIM → `NOT_REGISTERED`; repeat check-in → `ALREADY_RECORDED` (no new row).
+- **US-SP-07** After finalization, the student's participation history shows the attendance as confirmed.
+- **US-SP-08** New check-ins appear on the admin panel without manual reload (NFR-09).
+- **US-SP-09** Present records are split into matched/unmatched against the roster.
+- **US-SP-10** Finalize sets `isVerified=true` and `admin_id` on all included records, updates history, is atomic; cancel changes nothing.
+
+## 6. REQUIREMENTS
+
+Non-functional (from report): **NFR-06** real-time validation & sync preventing duplicates; **NFR-07** accurate NIM-to-roster matching, minimal error; **NFR-08** secure storage of registration & attendance data (incl. NIM); **NFR-09** admin panel real-time attendance without significant lag.
+
+Functional (by content, because the report's SR numbering is inconsistent, see §15): landing page; form for NIM & details; confirmation/error (invalid/duplicate NIM); attendance form during session; material list & download; admin panel with real-time present NIMs; manual match vs roster; finalize list; write present status; fetch workshop history; serve materials.
+
+## 7. DOMAIN MODEL
+
+```mermaid
+classDiagram
+  class Student { nim; fullName; email; studyProgram }
+  class Workshop { title; scheduleDate; location; quota; status }
+  class Registration { registeredAt; status }
+  class Attendance { checkedInAt; status; isVerified }
+  class Material { title; file; uploadedAt }
+  class WorkshopAdmin { fullName; role; email }
+  Student "1" -- "0..*" Registration : makes
+  Registration "0..*" -- "1" Workshop : is for
+  Registration "1" *-- "0..1" Attendance : results in
+  Workshop "1" *-- "0..*" Material : has
+  WorkshopAdmin "0..1" -- "0..*" Attendance : confirms
+```
+
+No generalization. Compositions: Registration→Attendance, Workshop→Material.
+
+## 8. BCE ARCHITECTURE & ROBUSTNESS RULES
+
+Layers: **Boundary** (UI pages) → **Controller** (use case logic) → **Entity** (domain + persistence). Controllers may call controllers and themselves.
+
+| Stereotype | Class | Realizes | Source |
+|---|---|---|---|
+| Boundary | RegistrationFormPage | UC-SP-02/10/11/12 | report |
+| Boundary | AttendanceFormPage | UC-SP-04 | report |
+| Boundary | AttendanceAdminPanel | UC-SP-07/08/09/13 | report |
+| Boundary | RegistrationHistoryPage | UC-SP-03 | [PROPOSED] |
+| Boundary | ScheduleMaterialPage | UC-SP-05 | [PROPOSED] |
+| Boundary | ParticipationHistoryPage | UC-SP-06 | [PROPOSED] |
+| Control | RegistrationController | UC-SP-02/03/10 | report |
+| Control | AttendanceController | UC-SP-04 | report |
+| Control | VerificationController | UC-SP-07/08/09/13 | report |
+| Control | MaterialController | UC-SP-05 | [PROPOSED] |
+| Control | ParticipationController | UC-SP-06 | [PROPOSED] |
+
+Entity operations (source = report sequence diagrams unless marked):
+
+- **Student**: `findByNIM(nim)`, `validateNIM(nim)`
+- **Workshop**: `getWorkshop(workshop_id)`, `checkSessionOngoing(workshop_id)`
+- **Registration**: `getHistory(nim)`, `checkDuplicate(nim, workshop_id)`, `saveRegistration(nim, workshop_id, registered_at, status)`, `matchRoster(nim, workshop_id)`, `getRoster(workshop_id)`, `updateParticipationHistory(registration_ids, status)`
+- **Attendance**: `checkExisting(registration_id)`, `saveAttendance(registration_id, checked_in_at, status, is_verified)`, `getPresentRecords(workshop_id)`, `updateRecord(attendance_id, action)`, `finalizeRecords(workshop_id, admin_id, is_verified)`, `findByRegistrations(ids)` [PROPOSED]
+- **Admin**: `getAdmin(admin_id)`
+- **Material**: `findByWorkshop(workshop_id)` [PROPOSED], `getFile(material_id)` [PROPOSED]
+
+```mermaid
+flowchart LR
+  subgraph B[Boundary]
+    RFP[RegistrationFormPage]; RHP[RegistrationHistoryPage]; AFP[AttendanceFormPage]
+    SMP[ScheduleMaterialPage]; PHP[ParticipationHistoryPage]; AAP[AttendanceAdminPanel]
+  end
+  subgraph C[Control]
+    RC[RegistrationController]; AC[AttendanceController]; MC[MaterialController]
+    PC[ParticipationController]; VC[VerificationController]
+  end
+  subgraph E[Entity]
+    Student; Workshop; Registration; Attendance; Material; Admin
+  end
+  RFP-->RC; RHP-->RC; AFP-->AC; SMP-->MC; PHP-->PC; AAP-->VC
+  RC-->Student & Workshop & Registration
+  AC-->Workshop & Registration & Attendance
+  MC-->Registration & Workshop & Material
+  PC-->Student & Registration & Attendance
+  VC-->Workshop & Attendance & Registration & Admin
+```
+
+## 9. USE CASES
+
+| ID | Use case | Actor | Classes |
+|---|---|---|---|
+| UC-SP-01 | Login | STD, ADM | Student, Admin |
+| UC-SP-02 | Submit Workshop Registration | STD | Student, Workshop, Registration |
+| UC-SP-03 | View Registration History | STD | Student, Registration |
+| UC-SP-04 | Submit Workshop Attendance | STD | Workshop, Registration, Attendance |
+| UC-SP-05 | View Schedule & Download Workshop Materials | STD | Workshop, Material, Registration |
+| UC-SP-06 | View Participation History | STD | Student, Registration, Attendance |
+| UC-SP-07 | Monitor Real-time Attendance | ADM | Attendance, Registration, Workshop |
+| UC-SP-08 | Verify Attendance vs Registered Roster | ADM | Attendance, Registration |
+| UC-SP-09 | Finalize Attendance List | ADM | Attendance, Admin, Registration |
+| UC-SP-10 | Validate NIM & Detect Duplicate Registration | System | Student, Registration |
+| UC-SP-11 | Show Registration Confirmation [valid] | STD | Registration |
+| UC-SP-12 | Show Registration Error [invalid/duplicate] | STD | Registration |
+| UC-SP-13 | Update Participation History | System | Registration, Attendance |
+
+Relationships: UC-02 «include» UC-10; UC-11, UC-12 «extend» UC-02; UC-09 «include» UC-08 and UC-13. Login is one use case associated with both roles (not included everywhere). Monitoring (UC-07) is **not** included in UC-09.
+
+```mermaid
+flowchart LR
+  STD((FILKOM Student)); ADM((Workshop Admin))
+  subgraph BCC IIS
+    U01[UC-SP-01 Login]; U02[UC-SP-02 Submit Registration]; U03[UC-SP-03 View Registration History]
+    U10[UC-SP-10 Validate NIM & Detect Duplicate]; U11[UC-SP-11 Confirmation]; U12[UC-SP-12 Error]
+    U04[UC-SP-04 Submit Attendance]; U05[UC-SP-05 Schedule & Materials]; U06[UC-SP-06 Participation History]
+    U07[UC-SP-07 Monitor Attendance]; U08[UC-SP-08 Verify vs Roster]; U09[UC-SP-09 Finalize List]; U13[UC-SP-13 Update History]
+  end
+  STD---U01 & U02 & U03 & U04 & U05 & U06
+  ADM---U01 & U07 & U08 & U09
+  U02-.include.->U10; U11-.extend.->U02; U12-.extend.->U02
+  U09-.include.->U08; U09-.include.->U13
+```
+
+## 10. ROBUSTNESS DIAGRAMS (implement exactly)
+
+Notation: `A`=actor, `B`=boundary, `C`=control, `E`=entity. Arrows are calls; `[g]` = guard.
+
+```mermaid
+flowchart LR
+  %% RD-SP-01 Submit Workshop Registration (UC-SP-02 + UC-SP-10/11/12)
+  STD1((STD))-->|1 openRegistrationLink · 7 submitRegistration|RFP1[RegistrationFormPage]
+  RFP1-->|2 requestPrefill · 8 processRegistration|RC1{{RegistrationController}}
+  RC1-->|3 getWorkshop|W1[(Workshop)]
+  RC1-->|4 findByNIM · 9 validateNIM|S1[(Student)]
+  RC1-->|5 getHistory · 10 checkDuplicate · 11 saveRegistration [valid & not dup]|R1[(Registration)]
+  RC1-->|6 showPrefilledForm · 12 showConfirmation · 13 showError|RFP1
+```
+
+```mermaid
+flowchart LR
+  %% RD-SP-03 Submit Workshop Attendance (UC-SP-04)
+  STD3((STD))-->|1 openAttendanceForm · 2 submitAttendance|AFP3[AttendanceFormPage]
+  AFP3-->|3 recordAttendance|AC3{{AttendanceController}}
+  AC3-->|4 checkSessionOngoing|W3[(Workshop)]
+  AC3-->|5 matchRoster|R3[(Registration)]
+  AC3-->|6 checkExisting · 7 saveAttendance|A3[(Attendance)]
+  AC3-->|8 showAttendanceStatus · 9 showError NOT_REGISTERED · 10 showMessage ALREADY_RECORDED|AFP3
+```
+
+```mermaid
+flowchart LR
+  %% RD-SP-08 Finalize Attendance List (UC-SP-09 + 08 + 13)
+  ADM8((ADM))-->|1 confirmFinalList · 7 cancelFinalization|AAP8[AttendanceAdminPanel]
+  AAP8-->|2 finalizeAttendance|VC8{{VerificationController}}
+  VC8-->|3 verifyAgainstRoster|VC8
+  VC8-->|4 getAdmin|AD8[(Admin)]
+  VC8-->|5 finalizeRecords|A8[(Attendance)]
+  VC8-->|6 updateParticipationHistory|R8[(Registration)]
+  VC8-->|8 showFinalizationResult|AAP8
+```
+
+Remaining robustness diagrams (same notation):
+
+- **RD-SP-02 (UC-SP-03):** STD→RegistrationHistoryPage→RegistrationController→{Student.findByNIM, Registration.getHistory}→showHistory.
+- **RD-SP-04 (UC-SP-05):** STD→ScheduleMaterialPage→MaterialController→{Registration.matchRoster, Workshop.getWorkshop, Material.findByWorkshop, Material.getFile}→showScheduleAndMaterials / sendFile / showError(NOT_REGISTERED).
+- **RD-SP-05 (UC-SP-06):** STD→ParticipationHistoryPage→ParticipationController→{Student.findByNIM, Registration.getHistory, Attendance.findByRegistrations}→showParticipationHistory.
+- **RD-SP-06 (UC-SP-07):** ADM→AttendanceAdminPanel→VerificationController→{Workshop.getWorkshop, Attendance.getPresentRecords, Registration.getRoster}→showPresentList; panel repeats `refresh(workshop_id)` (real-time).
+- **RD-SP-07 (UC-SP-08):** ADM→AttendanceAdminPanel→VerificationController→{Attendance.getPresentRecords, Registration.getRoster}, self `verifyAgainstRoster`, `showPresentList(matched, unmatched)`; [unmatched] `correctOrRemoveEntry`→`updateEntry`→`Attendance.updateRecord`.
+
+## 11. SEQUENCE DIAGRAMS
+
+```mermaid
+sequenceDiagram
+  actor STD
+  participant UI as RegistrationFormPage
+  participant RC as RegistrationController
+  participant W as Workshop
+  participant S as Student
+  participant R as Registration
+  STD->>UI: 1 openRegistrationLink(workshop_id)
+  UI->>RC: 2 requestPrefill(nim, workshop_id)
+  RC->>W: 3 getWorkshop(workshop_id)
+  RC->>S: 4 findByNIM(nim)
+  RC->>R: 5 getHistory(nim)
+  RC-->>UI: 6 showPrefilledForm(profile, history)
+  STD->>UI: 7 submitRegistration(nim, details)
+  UI->>RC: 8 processRegistration(nim, workshop_id, details)
+  RC->>S: 9 validateNIM(nim)
+  RC->>R: 10 checkDuplicate(nim, workshop_id)
+  alt valid and not duplicate
+    RC->>R: 11 saveRegistration(nim, workshop_id, registered_at, status)
+    RC-->>UI: 12 showConfirmation(registration_id)
+  else NIM invalid / duplicate
+    RC-->>UI: 13 showError(INVALID_NIM | DUPLICATE)
+  end
+```
+
+```mermaid
+sequenceDiagram
+  actor STD
+  participant UI as AttendanceFormPage
+  participant AC as AttendanceController
+  participant W as Workshop
+  participant R as Registration
+  participant A as Attendance
+  STD->>UI: 1 openAttendanceForm(workshop_id)
+  STD->>UI: 2 submitAttendance(nim)
+  UI->>AC: 3 recordAttendance(nim, workshop_id)
+  AC->>W: 4 checkSessionOngoing(workshop_id)
+  AC->>R: 5 matchRoster(nim, workshop_id)
+  alt not on roster
+    AC-->>UI: 9 showError(NOT_REGISTERED)
+  else on roster
+    AC->>A: 6 checkExisting(registration_id)
+    alt not yet checked in
+      AC->>A: 7 saveAttendance(registration_id, checked_in_at, "present", false)
+      AC-->>UI: 8 showAttendanceStatus(status)
+    else already checked in
+      AC-->>UI: 10 showMessage(ALREADY_RECORDED)
+    end
+  end
+```
+
+```mermaid
+sequenceDiagram
+  actor ADM
+  participant P as AttendanceAdminPanel
+  participant VC as VerificationController
+  participant A as Attendance
+  participant R as Registration
+  participant AD as Admin
+  ADM->>P: 1 openAttendancePanel(workshop_id)
+  P->>VC: 2 requestPresentList(workshop_id)
+  VC->>A: 3 getPresentRecords(workshop_id)
+  VC->>R: 4 getRoster(workshop_id)
+  VC->>VC: 5 verifyAgainstRoster(present, roster)
+  VC-->>P: 6 showPresentList(matched, unmatched)
+  opt unmatched NIMs found
+    ADM->>P: 7 correctOrRemoveEntry(nim, action)
+    P->>VC: 8 updateEntry(nim, workshop_id, action)
+    VC->>A: 9 updateRecord(attendance_id, action)
+  end
+  alt admin confirms
+    ADM->>P: 10 confirmFinalList(workshop_id)
+    P->>VC: 11 finalizeAttendance(workshop_id, admin_id)
+    VC->>AD: 12 getAdmin(admin_id)
+    VC->>A: 13 finalizeRecords(workshop_id, admin_id, is_verified=true)
+    VC->>R: 14 updateParticipationHistory(registration_ids, status)
+    VC-->>P: 15 showFinalizationResult(status)
+  else admin cancels
+    ADM->>P: 16 cancelFinalization(workshop_id)
+  end
+```
+
+**SD-SP-04 [PROPOSED]** (UC-SP-05): STD→ScheduleMaterialPage→MaterialController: `getScheduleAndMaterials(nim, workshop_id)` → `Registration.matchRoster` → [registered] `Workshop.getWorkshop`, `Material.findByWorkshop` → `showScheduleAndMaterials`; download: `requestDownload(nim, material_id)` → `Material.getFile` → `sendFile`; [not registered] `showError(NOT_REGISTERED)`.
+
+## 12. DATA FLOW DIAGRAMS
+
+```mermaid
+flowchart LR
+  STD[FILKOM Student]; ADM[Workshop Admin]
+  P0((0 BCC IIS Workshop))
+  STD-->|registration data, attendance NIM, material request|P0
+  P0-->|confirmation/error, status, schedule & materials, histories|STD
+  ADM-->|attendance confirmation, corrections|P0
+  P0-->|present NIM list & roster|ADM
+```
+
+```mermaid
+flowchart LR
+  STD[FILKOM Student]; ADM[Workshop Admin]
+  P1((1.0 Validate & Register)); P2((2.0 Record Attendance))
+  P3((3.0 Verify & Finalize Attendance)); P4((4.0 Serve Schedule & Materials))
+  D1[(D1 Participant & Registration)]; D2[(D2 Attendance)]; D3[(D3 Workshop & Material)]
+  STD-->|NIM, details|P1; P1-->|confirmation / error|STD
+  P1-->|registration record|D1; D1-.->|profile & history|P1
+  STD-->|attendance NIM|P2; P2-->|attendance status|STD
+  D1-.->|registered roster|P2; D3-.->|workshop status|P2; P2-->|attendance record|D2
+  ADM-->|attendance confirmation|P3; P3-->|present NIM list & roster|ADM
+  D2-.->|present records|P3; D1-.->|roster|P3
+  P3-->|final attendance list|D2; P3-->|participation history update|D1
+  STD-->|material request|P4; P4-->|schedule & materials|STD
+  D3-.->|schedules & materials|P4; D1-.->|registration check|P4
+```
+
+Solid = write/flow, dashed = read.
+
+## 13. DATA MODEL (PDM) & DDL
+
+```mermaid
+erDiagram
+  STUDENT ||--o{ REGISTRATION : makes
+  WORKSHOP ||--o{ REGISTRATION : "is for"
+  REGISTRATION ||--o| ATTENDANCE : "results in"
+  ADMIN |o--o{ ATTENDANCE : confirms
+  WORKSHOP ||--o{ MATERIAL : has
+  STUDENT { varchar15 nim PK; varchar100 full_name; varchar100 email; varchar50 study_program }
+  WORKSHOP { int workshop_id PK; varchar150 title; datetime schedule_date; varchar100 location; int quota; varchar20 status }
+  REGISTRATION { int registration_id PK; varchar15 nim FK; int workshop_id FK; datetime registered_at; varchar20 status }
+  ATTENDANCE { int attendance_id PK; int registration_id FK_UQ; int admin_id FK; datetime checked_in_at; varchar20 status; boolean is_verified }
+  ADMIN { int admin_id PK; varchar100 full_name; varchar30 role; varchar100 email }
+  MATERIAL { int material_id PK; int workshop_id FK; varchar150 title; varchar255 file_url; datetime uploaded_at }
+```
+
+```sql
+CREATE TABLE student (nim VARCHAR(15) PRIMARY KEY, full_name VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, study_program VARCHAR(50) NOT NULL);
+CREATE TABLE workshop (workshop_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(150) NOT NULL, schedule_date DATETIME NOT NULL, location VARCHAR(100) NOT NULL, quota INT NOT NULL, status VARCHAR(20) NOT NULL);
+CREATE TABLE admin (admin_id INT AUTO_INCREMENT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, role VARCHAR(30) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE);
+CREATE TABLE registration (
+  registration_id INT AUTO_INCREMENT PRIMARY KEY, nim VARCHAR(15) NOT NULL, workshop_id INT NOT NULL,
+  registered_at DATETIME NOT NULL, status VARCHAR(20) NOT NULL,
+  CONSTRAINT uq_reg UNIQUE (nim, workshop_id),
+  FOREIGN KEY (nim) REFERENCES student(nim), FOREIGN KEY (workshop_id) REFERENCES workshop(workshop_id));
+CREATE TABLE attendance (
+  attendance_id INT AUTO_INCREMENT PRIMARY KEY, registration_id INT NOT NULL UNIQUE, admin_id INT NULL,
+  checked_in_at DATETIME NOT NULL, status VARCHAR(20) NOT NULL, is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  FOREIGN KEY (registration_id) REFERENCES registration(registration_id) ON DELETE CASCADE,
+  FOREIGN KEY (admin_id) REFERENCES admin(admin_id));
+CREATE TABLE material (material_id INT AUTO_INCREMENT PRIMARY KEY, workshop_id INT NOT NULL, title VARCHAR(150) NOT NULL, file_url VARCHAR(255) NOT NULL, uploaded_at DATETIME NOT NULL,
+  FOREIGN KEY (workshop_id) REFERENCES workshop(workshop_id) ON DELETE CASCADE);
+```
+
+## 14. STATE MODELS & BUSINESS RULES
+
+```mermaid
+stateDiagram-v2
+  state Workshop.status { [*] --> OPEN; OPEN --> ONGOING; ONGOING --> CLOSED }
+  state Attendance { [*] --> PRESENT_UNVERIFIED: saveAttendance; PRESENT_UNVERIFIED --> VERIFIED: finalizeRecords; PRESENT_UNVERIFIED --> [*]: removed by admin }
+```
+
+Values `OPEN`, `ONGOING`, `present`, `isVerified` are from the report; `CLOSED` and `REGISTERED` (Registration.status) are **[PROPOSED]**.
+
+Rules:
+- **BR-1** registration only when `Workshop.status = OPEN`; attendance only when `ONGOING` (AD-SP-02 step A).
+- **BR-2** NIM must exist/validate (`validateNIM`); invalid → `INVALID_NIM`.
+- **BR-3** one Registration per (nim, workshop_id) → `DUPLICATE`; DB constraint is authoritative.
+- **BR-4** one Attendance per Registration; repeat → `ALREADY_RECORDED`.
+- **BR-5** new Attendance: `status="present"`, `is_verified=false`, `admin_id=NULL`.
+- **BR-6** finalize runs verify → set `is_verified=true` + `admin_id` → update history, in **one transaction**.
+- **BR-7** cancel finalization changes no data.
+- **BR-8** quota enforcement is **undefined in the report**; implement behind a feature flag, default off [PROPOSED].
+- **BR-9** pre-filled identity fields are read-only (Fig. 13 UI).
+
+Error codes: `INVALID_NIM`, `DUPLICATE`, `NOT_REGISTERED`, `ALREADY_RECORDED`, `SESSION_NOT_ONGOING`, `NOT_FOUND`, `FORBIDDEN`.
+
+## 15. KNOWN ISSUES IN THE SOURCE (resolve or ask; do not silently pick)
+
+1. Author NIM: cover/table `245160407141003` vs Section 3 `245150407141003`.
+2. Requirement IDs conflict between §3.4.2 (SR-01…07) and Tables 3.1/3.12/3.14 (SR-01…06, different meanings; STD-UR-04/05 vs 05/06). Use story/use-case IDs.
+3. “Unmatched NIM” branch (UC-SP-08/09) is nearly unreachable because attendance requires a registration; keep as safeguard.
+4. STD-FR-05 says materials need *verified attendance*; US-SP-05 says *registration confirmed*. Default: registration confirmed; make it a config switch.
+5. Status enumerations and quota behavior undefined.
+
+## 16. API CONTRACT (REST, JSON) [PROPOSED mapping of controller operations]
+
+| Controller op | Method & path | Notes |
+|---|---|---|
+| requestPrefill | `GET /workshops/{id}/registration-form?nim=` | profile + history |
+| processRegistration | `POST /workshops/{id}/registrations` | 201 / 422 `INVALID_NIM` / 409 `DUPLICATE` |
+| requestHistory | `GET /students/{nim}/registrations` | |
+| recordAttendance | `POST /workshops/{id}/attendance` `{nim}` | 201 / 404 `NOT_REGISTERED` / 409 `ALREADY_RECORDED` / 409 `SESSION_NOT_ONGOING` |
+| getScheduleAndMaterials | `GET /workshops/{id}/materials?nim=` | 403/404 `NOT_REGISTERED` |
+| requestDownload | `GET /materials/{id}/file` | |
+| requestParticipationHistory | `GET /students/{nim}/participation` | registrations + attendance |
+| requestPresentList | `GET /admin/workshops/{id}/attendance` | add SSE/WebSocket or polling for real time |
+| updateEntry | `PATCH /admin/attendance/{id}` `{action}` | correct/remove |
+| finalizeAttendance | `POST /admin/workshops/{id}/attendance/finalize` | uses authenticated admin_id |
+
+Auth (UC-SP-01): student and admin sessions; admin routes require role check. Store NIM and attendance data securely (NFR-08): TLS, parameterized queries, least-privilege DB user, audit of finalization.
+
+## 17. UI (low-fidelity, 4 screens)
+
+1. Overview dashboard (CMMI 1 vs 2, 5-step workshop lifecycle).
+2. Registration & central DB: NIM validation, pre-filled locked fields, duplicate check, participation history.
+3. Live attendance: counters, NIM ingestion with instant roster match, roster cross-check, **Lock & Finalize**.
+4. Schedules & materials: single repository, “Attendance Verified” badge, learning record, audit trail.
+
+## 18. BUILD PLAN (do in this order, stop after each phase for review)
+
+1. **Phase 0** — list assumptions & open questions (§15); confirm stack.
+2. **Phase 1** — schema/migrations (§13), seed data, entity layer with the exact operations of §8.
+3. **Phase 2** — RegistrationController + RD-SP-01/02 (UC-SP-02, 03, 10–12) + tests.
+4. **Phase 3** — AttendanceController (UC-SP-04) + tests incl. concurrency on duplicates.
+5. **Phase 4** — VerificationController (UC-SP-07/08/09/13) + real-time panel + transactional finalize.
+6. **Phase 5** — MaterialController, ParticipationController, history pages.
+7. **Phase 6** — auth, NFR-06…09 verification, load/lag check on admin panel.
+
+## 19. OUTPUT FORMAT & DEFINITION OF DONE
+
+For each phase output: (a) files changed, (b) code, (c) tests mapped to US/UC IDs, (d) a traceability line `US → UC → RD → SD → test`, (e) deviations flagged `[PROPOSED]`.
+
+Done when: all acceptance criteria in §5 pass; every controller operation matches §8 names; BCE rules hold (no boundary→entity, no controller→actor calls); no extra domain tables exist; duplicate and double-attendance races are impossible at DB level; finalize is atomic.
+
+**Self-check before replying:** Did I add a class not in §2.1? Did I rename a glossary term? Did an entity get called from a boundary? If yes, fix before answering

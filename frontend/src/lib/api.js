@@ -59,15 +59,31 @@ export async function deleteWorkshop(id, token) {
   return apiFetch(`/api/workshops/${id}`, { method: "DELETE", token });
 }
 
+// Spec §16 — Registration (Phase 2)
+export async function requestRegistrationPrefill(workshopId, nim) {
+  const q = nim ? `?nim=${encodeURIComponent(nim)}` : "";
+  return apiFetch(`/api/workshops/${workshopId}/registration-form${q}`);
+}
+
+export async function processRegistration(workshopId, nim, details = {}) {
+  return apiFetch(`/api/workshops/${workshopId}/registrations`, {
+    method: "POST",
+    body: { nim, ...details },
+  });
+}
+
+export async function requestHistory(nim) {
+  return apiFetch(`/api/students/${encodeURIComponent(nim)}/registrations`);
+}
+
+// Legacy helpers (kept for existing UI; map to spec where possible)
 export async function registerParticipant(workshopId, token) {
-  return apiFetch(`/api/workshops/${workshopId}/register`, { method: "POST", token });
+  // spec path with token-derived NIM not available here; UI should pass NIM.
+  throw new Error("Use processRegistration(workshopId, nim)");
 }
 
 export async function registerParticipantByNim(workshopId, nim) {
-  return apiFetch(`/api/workshops/${workshopId}/register-public`, {
-    method: "POST",
-    body: { nim },
-  });
+  return processRegistration(workshopId, nim);
 }
 
 export async function fetchWorkshopRegistrations(workshopId, token) {
@@ -90,6 +106,7 @@ export async function markAttendanceByNim(workshopId, nim) {
 // --- Student API ---
 
 export async function fetchMyWorkshops(token) {
+  // spec-aligned path via registration route compatibility
   return apiFetch("/api/student/my-workshops", { token });
 }
 
