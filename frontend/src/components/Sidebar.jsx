@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const adminNavItems = [
@@ -13,25 +13,26 @@ const adminNavItems = [
 
 const studentNavItems = [
   { path: "/", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { path: "/profile", label: "Profile", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
   { path: "/workshops", label: "Browse Workshops", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
   { path: "/dashboard", label: "My Enrolled", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 002-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
   { path: "/registration", label: "Register for Workshop", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
   { path: "/registrations", label: "Registration History", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 002-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
   { path: "/participation", label: "Participation History", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 002-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-  { path: "/attendance", label: "Mark Attendance", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
   { path: "/schedule", label: "Schedule & Materials", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
 ];
 
 export default function Sidebar() {
   const { isAuthenticated, isAdmin, logout, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = isAdmin ? adminNavItems : studentNavItems;
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
@@ -62,15 +63,16 @@ export default function Sidebar() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
           <div className="absolute left-0 top-0 h-full w-72 border-r border-brand-border bg-brand-navy p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <MobileNavContent
-              navItems={navItems}
-              isActive={isActive}
-              isAdmin={isAdmin}
-              isAuthenticated={isAuthenticated}
-              user={user}
-              logout={logout}
-              onNavigate={() => setMobileOpen(false)}
-            />
+<MobileNavContent
+            navItems={navItems}
+            isActive={isActive}
+            isAdmin={isAdmin}
+            isAuthenticated={isAuthenticated}
+            user={user}
+            logout={logout}
+            navigate={navigate}
+            onNavigate={() => setMobileOpen(false)}
+          />
           </div>
         </div>
       )}
@@ -84,13 +86,14 @@ export default function Sidebar() {
           isAuthenticated={isAuthenticated}
           user={user}
           logout={logout}
+          navigate={navigate}
         />
       </aside>
     </>
   );
 }
 
-function SidebarContent({ navItems, isActive, isAdmin, isAuthenticated, user, logout }) {
+function SidebarContent({ navItems, isActive, isAdmin, isAuthenticated, user, logout, navigate }) {
   return (
     <>
       <div className="flex items-center gap-2.5 px-5 py-4">
@@ -161,7 +164,7 @@ function SidebarContent({ navItems, isActive, isAdmin, isAuthenticated, user, lo
               <div className="text-[10px] text-brand-muted">{isAdmin ? "Admin" : "Student"}</div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => { logout(); navigate("/login", { replace: true }); }}
               className="rounded-lg p-1.5 text-brand-muted transition hover:text-white hover:bg-white/5"
               title="Logout"
             >
@@ -176,7 +179,7 @@ function SidebarContent({ navItems, isActive, isAdmin, isAuthenticated, user, lo
   );
 }
 
-function MobileNavContent({ navItems, isActive, isAdmin, isAuthenticated, user, logout, onNavigate }) {
+function MobileNavContent({ navItems, isActive, isAdmin, isAuthenticated, user, logout, navigate, onNavigate }) {
   return (
     <>
       <div className="flex items-center gap-2.5 px-2 py-3">
@@ -199,7 +202,7 @@ function MobileNavContent({ navItems, isActive, isAdmin, isAuthenticated, user, 
       {isAuthenticated && (
         <div className="mt-auto pt-4 border-t border-brand-border">
           <button
-            onClick={() => { logout(); onNavigate(); }}
+            onClick={() => { logout(); navigate("/login", { replace: true }); onNavigate(); }}
             className="w-full rounded-lg border border-brand-border px-4 py-2 text-sm text-white hover:bg-white/5 transition"
           >
             Logout

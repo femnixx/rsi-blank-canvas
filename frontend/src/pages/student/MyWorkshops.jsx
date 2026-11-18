@@ -227,7 +227,7 @@ export default function MyWorkshops() {
                     {w.speaker_name && (
                       <p className="mb-1 text-sm text-brand-muted">Speaker: {w.speaker_name}</p>
                     )}
-                    <p className="mb-1 text-sm text-brand-muted">
+<p className="mb-1 text-sm text-brand-muted">
                       {w.event_date
                         ? new Date(w.event_date).toLocaleDateString("en-US", {
                             month: "short",
@@ -249,13 +249,16 @@ export default function MyWorkshops() {
                         Not yet attended
                       </div>
                     )}
-                    <button
-                      onClick={() => openMaterials(w.id)}
-                      className="w-full btn-primary"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                      View Course Materials
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link to={`/schedule/${w.id}`} className="btn-primary text-center">
+                        <svg className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Schedule & Materials
+                      </Link>
+                      <Link to={`/attendance/${w.id}`} className="btn-secondary text-center">
+                        <svg className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Mark Attendance
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

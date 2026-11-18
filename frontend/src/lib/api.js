@@ -73,7 +73,7 @@ export async function processRegistration(workshopId, nim, details = {}) {
 }
 
 export async function requestHistory(nim) {
-  return apiFetch(`/api/students/${encodeURIComponent(nim)}/registrations`);
+  return apiFetch(`/api/workshops/students/${encodeURIComponent(nim)}/registrations`);
 }
 
 export async function fetchParticipationHistory(nim) {
@@ -107,9 +107,17 @@ export async function markAttendanceByNim(workshopId, nim) {
 
 // --- Student API ---
 
+export async function fetchStudentProfile(nim) {
+  return apiFetch(`/api/workshops/students/${encodeURIComponent(nim)}/registrations`);
+}
+
+export async function fetchStudentRegistrations(nim) {
+  return apiFetch(`/api/workshops/students/${encodeURIComponent(nim)}/registrations`);
+}
+
 export async function fetchMyWorkshops(token) {
   // spec-aligned path via registration route compatibility
-  return apiFetch("/api/student/my-workshops", { token });
+  return apiFetch("/api/workshops/student/my-workshops", { token });
 }
 
 // --- Materials API ---

@@ -23,6 +23,7 @@ import RegistrationHistoryPage from "./pages/student/RegistrationHistoryPage.jsx
 import ParticipationHistoryPage from "./pages/student/ParticipationHistoryPage.jsx";
 import AttendanceFormPage from "./pages/student/AttendanceFormPage.jsx";
 import ScheduleMaterialPage from "./pages/student/ScheduleMaterialPage.jsx";
+import ProfilePage from "./pages/student/ProfilePage.jsx";
 import AttendanceAdminPanel from "./pages/admin/AttendanceAdminPanel.jsx";
 
 function PublicOnlyRoute({ children }) {
@@ -193,6 +194,14 @@ function AppRoutes() {
         element={
           <StudentRoute>
             <ParticipationHistoryPage />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <StudentRoute>
+            <ProfilePage />
           </StudentRoute>
         }
       />

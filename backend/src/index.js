@@ -43,14 +43,15 @@ app.get("/api/health", (req, res) => {
 // Auth routes (public + protected /me)
 app.use("/api/auth", authRoutes);
 
+// Spec-aligned materials/participation (Phase 5)
+app.use("/api", portalRoutes);
+
 // Spec-aligned registration/history endpoints (Phase 2)
-app.use("/api", registrationRoutes);
+app.use("/api/workshops", registrationRoutes);
 // Spec-aligned attendance endpoint (Phase 3)
 app.use("/api", attendanceRoutes);
 // Spec-aligned admin verification/finalize (Phase 4)
 app.use("/api", adminAttendanceRoutes);
-// Spec-aligned materials/participation (Phase 5)
-app.use("/api", portalRoutes);
 
 // Legacy workshop routes (admin create, materials, attendance management - to be migrated Phase 3-5)
 app.use("/api/workshops", workshopRoutes);

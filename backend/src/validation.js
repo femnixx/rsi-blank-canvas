@@ -44,30 +44,36 @@ function checkType(value, rule) {
 }
 
 export function validate(schema, data) {
-  if (!schema || schema.kind !== "object") throw new Error("validate: schema must be object(...)");
-  const errors = [];
-  const out = {};
-  for (const [key, rule] of Object.entries(schema.shape)) {
-    const value = data && typeof data === "object" ? data[key] : undefined;
-    if (rule.kind === "optional") {
-      if (value === undefined || value === null) continue;
-      const inner = validate(rule.schema, { _: value });
-      if (!inner.success) { errors.push({ field: key, ...inner.error }); continue; }
-      out[key] = inner.data._;
-      continue;
+  const isRootObject = schema && schema.kind === "object";
+  if (isRootObject) {
+    const errors = [];
+    const out = {};
+    for (const [key, rule] of Object.entries(schema.shape)) {
+      const value = data && typeof data === "object" ? data[key] : undefined;
+      if (rule.kind === "optional") {
+        if (value === undefined || value === null) continue;
+        const inner = validate(rule.schema, { _: value });
+        if (!inner.success) { errors.push({ field: key, ...inner.error }); continue; }
+        out[key] = inner.data._;
+        continue;
+      }
+      const required = rule.required !== false;
+      if (value === undefined || value === null || value === "") {
+        if (required) errors.push({ field: key, code: INVALID.code, message: key + " is required", status: INVALID.status });
+        else out[key] = undefined;
+        continue;
+      }
+      const c = checkType(value, rule);
+      if (!c.ok) errors.push({ field: key, code: INVALID.code, message: key + " " + c.msg, status: INVALID.status });
+      else out[key] = value;
     }
-    const required = rule.required !== false;
-    if (value === undefined || value === null || value === "") {
-      if (required) errors.push({ field: key, code: INVALID.code, message: key + " is required", status: INVALID.status });
-      else out[key] = undefined;
-      continue;
-    }
-    const c = checkType(value, rule);
-    if (!c.ok) errors.push({ field: key, code: INVALID.code, message: key + " " + c.msg, status: INVALID.status });
-    else out[key] = value;
+    if (errors.length) return { success: false, error: errors[0] };
+    return { success: true, data: out };
   }
-  if (errors.length) return { success: false, error: errors[0] };
-  return { success: true, data: out };
+  const value = data && typeof data === "object" ? data._ : data;
+  const c = checkType(value, schema);
+  if (!c.ok) return { success: false, error: { code: INVALID.code, message: c.msg, status: INVALID.status } };
+  return { success: true, data: { _: value } };
 }
 
 export function validateBody(schema) {

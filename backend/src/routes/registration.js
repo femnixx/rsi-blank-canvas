@@ -62,19 +62,4 @@ router.get("/student/my-workshops", requireAuth, requireStudent, async (req, res
   } catch (err) { sendErr(res, err); }
 });
 
-// Minimal workshop list/read for existing UI (not in §16 but required to navigate)
-router.get("/workshops", async (_req, res) => {
-  try {
-    const r = await pool.query(`SELECT workshop_id AS id, workshop_id, title, schedule_date AS event_date, location, quota, status FROM workshop ORDER BY schedule_date DESC`);
-    res.json({ workshops: r.rows });
-  } catch (err) { sendErr(res, err); }
-});
-router.get("/workshops/:id", async (req, res) => {
-  try {
-    const w = await Workshop.getWorkshop(req.params.id);
-    if (!w) return res.status(404).json({ code: "NOT_FOUND", message: "Workshop not found" });
-    res.json({ workshop: { ...w, id: w.workshop_id, event_date: w.scheduleDate } });
-  } catch (err) { sendErr(res, err); }
-});
-
 export default router;

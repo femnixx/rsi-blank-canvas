@@ -31,11 +31,11 @@ async function seed() {
 
     const studentHash = await bcrypt.hash("student123", 10);
     const students = [
-      ["2404001", "Budi Santoso", "budi.santoso@student.ub.ac.id", "Informatika"],
-      ["2404002", "Siti Rahayu", "siti.rahayu@student.ub.ac.id", "Informatika"],
-      ["2404003", "Ahmad Fauzi", "ahmad.fauzi@student.ub.ac.id", "Sistem Informasi"],
-      ["2404004", "Dewi Lestari", "dewi.lestari@student.ub.ac.id", "Informatika"],
-      ["2404005", "Rudi Hermawan", "rudi.hermawan@student.ub.ac.id", "Teknik Komputer"],
+      ["240400100000001", "Budi Santoso", "budi.santoso@student.ub.ac.id", "Informatika"],
+      ["240400100000002", "Siti Rahayu", "siti.rahayu@student.ub.ac.id", "Informatika"],
+      ["240400100000003", "Ahmad Fauzi", "ahmad.fauzi@student.ub.ac.id", "Sistem Informasi"],
+      ["240400100000004", "Dewi Lestari", "dewi.lestari@student.ub.ac.id", "Informatika"],
+      ["240400100000005", "Rudi Hermawan", "rudi.hermawan@student.ub.ac.id", "Teknik Komputer"],
     ];
     for (const [nim, full_name, email, study_program] of students) {
       await client.query(
@@ -62,11 +62,8 @@ async function seed() {
     }
 
     // Registrations CONFIRMED, honoring UNIQUE(nim,workshop_id)
-    const regs = [
-      ["2404001", wids[0]], ["2404002", wids[0]],
-      ["2404001", wids[1]], ["2404003", wids[1]],
-      ["2404001", wids[2]], ["2404004", wids[2]],
-    ];
+    // Default: empty — students register themselves via UI
+    const regs = [];
     const regIds = {};
     for (const [nim, wid] of regs) {
       const r = await client.query(
@@ -77,18 +74,21 @@ async function seed() {
       regIds[`${nim}:${wid}`] = r.rows[0].registration_id;
     }
 
-    // Attendance: one unverified PRESENT for ONGOING workshop
-    await client.query(
-      `INSERT INTO attendance (registration_id, checked_in_at, status, is_verified)
-       VALUES ($1, NOW(), 'PRESENT', false)`,
-      [regIds[`2404001:${wids[1]}`]]
-    );
-    // one verified PRESENT with verified_by_admin_id for COMPLETED workshop
-    await client.query(
-      `INSERT INTO attendance (registration_id, verified_by_admin_id, checked_in_at, status, is_verified)
-       VALUES ($1, $2, NOW(), 'PRESENT', true)`,
-      [regIds[`2404001:${wids[2]}`], admin.rows[0].admin_id]
-    );
+    // Attendance: only if registrations exist
+    if (regs.length > 0) {
+      // Attendance: one unverified PRESENT for ONGOING workshop
+      await client.query(
+        `INSERT INTO attendance (registration_id, checked_in_at, status, is_verified)
+         VALUES ($1, NOW(), 'PRESENT', false)`,
+        [regIds[`240400100000001:${wids[1]}`]]
+      );
+      // one verified PRESENT with verified_by_admin_id for COMPLETED workshop
+      await client.query(
+        `INSERT INTO attendance (registration_id, verified_by_admin_id, checked_in_at, status, is_verified)
+         VALUES ($1, $2, NOW(), 'PRESENT', true)`,
+        [regIds[`240400100000001:${wids[2]}`], admin.rows[0].admin_id]
+      );
+    }
 
     // Materials: one REGISTERED tier and one VERIFIED_ATTENDEE tier with asset_type
     await client.query(
@@ -98,7 +98,7 @@ async function seed() {
     );
 
     await client.query("COMMIT");
-    console.log("Seeded spec data: 1 workshop_admin, 5 students, 3 workshops, 6 registrations, 2 attendance, 2 materials");
+    console.log(`Seeded spec data: 1 workshop_admin, 5 students, 3 workshops, ${regs.length} registrations, ${regs.length > 0 ? 2 : 0} attendance, 2 materials`);
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
