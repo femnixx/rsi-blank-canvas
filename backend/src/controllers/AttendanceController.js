@@ -28,7 +28,7 @@ export const AttendanceController = {
     if (existing) throwError("ALREADY_RECORDED");
 
     try {
-      const att = await Attendance.saveAttendance(reg.registration_id, new Date(), "present", false);
+      const att = await Attendance.saveAttendance(reg.registration_id, new Date(), "PRESENT", false);
       if (!att) throwError("NOT_REGISTERED"); // composition guard
       return { attendance: att, message: "Attendance recorded" };
     } catch (err) {

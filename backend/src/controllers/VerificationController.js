@@ -37,33 +37,29 @@ export const VerificationController = {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      const wRes = await client.query(`SELECT workshop_id FROM workshop WHERE workshop_id=$1 FOR UPDATE`, [workshop_id]);
+      const wRes = await client.query(`SELECT workshop_id, status FROM workshop WHERE workshop_id=$1 FOR UPDATE`, [workshop_id]);
       if (!wRes.rows[0]) throwError("NOT_FOUND", "Workshop not found");
-      const aRes = await client.query(`SELECT admin_id FROM admin WHERE admin_id=$1`, [admin_id]);
+      if (wRes.rows[0].status !== "ONGOING") throwError("SESSION_NOT_ONGOING", "Workshop session not ongoing");
+      const aRes = await client.query(`SELECT admin_id FROM workshop_admin WHERE admin_id=$1`, [admin_id]);
       if (!aRes.rows[0]) throwError("FORBIDDEN", "Admin not found");
 
-      const present = await client.query(
-        `SELECT a.attendance_id, a.registration_id, r.nim
-         FROM attendance a JOIN registration r ON r.registration_id=a.registration_id
-         WHERE r.workshop_id=$1`, [workshop_id]
-      );
-      const roster = await client.query(`SELECT nim FROM registration WHERE workshop_id=$1`, [workshop_id]);
-      // verify step (BR-6 step 1) — safeguard; no mutations except finalize
-      const rosterNims = new Set(roster.rows.map(r => r.nim));
-      const validIds = present.rows.filter(p => rosterNims.has(p.nim)).map(p => p.registration_id);
+      // Cross-check attendance records against CONFIRMED registration roster for the workshop
+      const roster = await client.query(`SELECT registration_id FROM registration WHERE workshop_id=$1 AND status='CONFIRMED'`, [workshop_id]);
+      const confirmedIds = roster.rows.map(r => r.registration_id);
 
-      await client.query(
-        `UPDATE attendance a SET is_verified=true, admin_id=$2
-         FROM registration r
-         WHERE a.registration_id=r.registration_id AND r.workshop_id=$1`,
-        [workshop_id, admin_id]
+      const present = await client.query(
+        `SELECT a.attendance_id, a.registration_id
+         FROM attendance a
+         WHERE a.registration_id = ANY($1::int[])`, [confirmedIds]
       );
-      // UC-SP-13: update participation history (status reflects finalized attendance)
-      if (validIds.length) {
-        await client.query(`UPDATE registration SET status='ATTENDED' WHERE registration_id = ANY($1::int[])`, [validIds]);
-      }
+
+      const upd = await client.query(
+        `UPDATE attendance SET is_verified=true, verified_by_admin_id=$2
+         WHERE registration_id = ANY($1::int[])`, [confirmedIds, admin_id]
+      );
+      await client.query(`UPDATE workshop SET status='COMPLETED' WHERE workshop_id=$1`, [workshop_id]);
       await client.query("COMMIT");
-      return { workshop_id, finalized: true, verifiedCount: validIds.length };
+      return { workshop_id, finalized: true, verifiedCount: upd.rowCount };
     } catch (err) {
       await client.query("ROLLBACK");
       throw err;

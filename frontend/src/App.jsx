@@ -18,6 +18,12 @@ import AdminSchedules from "./pages/admin/AdminSchedules.jsx";
 import AdminParticipants from "./pages/admin/AdminParticipants.jsx";
 import AdminAudit from "./pages/admin/AdminAudit.jsx";
 import MyWorkshops from "./pages/student/MyWorkshops.jsx";
+import RegistrationFormPage from "./pages/student/RegistrationFormPage.jsx";
+import RegistrationHistoryPage from "./pages/student/RegistrationHistoryPage.jsx";
+import ParticipationHistoryPage from "./pages/student/ParticipationHistoryPage.jsx";
+import AttendanceFormPage from "./pages/student/AttendanceFormPage.jsx";
+import ScheduleMaterialPage from "./pages/student/ScheduleMaterialPage.jsx";
+import AttendanceAdminPanel from "./pages/admin/AttendanceAdminPanel.jsx";
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -125,6 +131,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/attendance/:id"
+        element={
+          <AdminRoute>
+            <AttendanceAdminPanel />
+          </AdminRoute>
+        }
+      />
+      <Route
         path="/admin/schedules"
         element={
           <AdminRoute>
@@ -155,6 +169,46 @@ function AppRoutes() {
         element={
           <StudentRoute>
             <MyWorkshops />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/registration/:id"
+        element={
+          <StudentRoute>
+            <RegistrationFormPage />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/registrations"
+        element={
+          <StudentRoute>
+            <RegistrationHistoryPage />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/participation"
+        element={
+          <StudentRoute>
+            <ParticipationHistoryPage />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/attendance/:id"
+        element={
+          <StudentRoute>
+            <AttendanceFormPage />
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/schedule/:id"
+        element={
+          <StudentRoute>
+            <ScheduleMaterialPage />
           </StudentRoute>
         }
       />

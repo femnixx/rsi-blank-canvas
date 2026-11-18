@@ -8,11 +8,11 @@ const ok = (name, cond) => { if (cond) { passed++; console.log("PASS", name); } 
 
 async function main() {
   await initDb();
-  await pool.query("DELETE FROM attendance; DELETE FROM registration; DELETE FROM material; DELETE FROM workshop; DELETE FROM admin; DELETE FROM student;");
+  await pool.query("DELETE FROM attendance; DELETE FROM registration; DELETE FROM material; DELETE FROM workshop; DELETE FROM workshop_admin; DELETE FROM student;");
   await pool.query(`INSERT INTO student (nim,full_name,email,study_program,password_hash) VALUES ('2404001','Budi','b@x.com','IF','x')`);
-  await pool.query(`INSERT INTO workshop (title,schedule_date,location,quota,status) VALUES ('Closed',NOW(),'Lab',10,'CLOSED'),('Ongoing',NOW(),'Lab',10,'ONGOING'),('Open',NOW(),'Lab',10,'OPEN')`);
+  await pool.query(`INSERT INTO workshop (title,schedule_date,location,quota,status) VALUES ('Closed',NOW(),'Lab',10,'COMPLETED'),('Ongoing',NOW(),'Lab',10,'ONGOING'),('Open',NOW(),'Lab',10,'OPEN')`);
   // roster only for workshop 2 (ongoing)
-  const reg = await pool.query(`INSERT INTO registration (nim,workshop_id,registered_at,status) VALUES ('2404001',2,NOW(),'REGISTERED') RETURNING registration_id`);
+  const reg = await pool.query(`INSERT INTO registration (nim,workshop_id,registered_at,status) VALUES ('2404001',2,NOW(),'CONFIRMED') RETURNING registration_id`);
 
   // BR-1 SESSION_NOT_ONGOING
   let c1; try { await AttendanceController.recordAttendance('2404001', 1); } catch(e){ c1=e.code; }
@@ -26,7 +26,7 @@ async function main() {
 
   // US-SP-06 success: present, unverified
   const a = await AttendanceController.recordAttendance('2404001', 2);
-  ok("US-SP-06 recorded present unverified", a.attendance?.status === "present" && a.attendance?.isVerified === false && a.attendance?.admin_id == null);
+  ok("US-SP-06 recorded present unverified", a.attendance?.status === "PRESENT" && a.attendance?.isVerified === false && a.attendance?.admin_id == null);
 
   // BR-4 ALREADY_RECORDED
   let c3; try { await AttendanceController.recordAttendance('2404001', 2); } catch(e){ c3=e.code; }
@@ -36,8 +36,8 @@ async function main() {
   await pool.query("DELETE FROM attendance");
   const rid = reg.rows[0].registration_id;
   await Promise.allSettled([
-    Attendance.saveAttendance(rid, new Date(), "present", false),
-    Attendance.saveAttendance(rid, new Date(), "present", false),
+    Attendance.saveAttendance(rid, new Date(), "PRESENT", false),
+    Attendance.saveAttendance(rid, new Date(), "PRESENT", false),
   ]);
   const n = await pool.query("SELECT COUNT(*)::int n FROM attendance WHERE registration_id=$1", [rid]);
   ok("BR-4 race single attendance row", n.rows[0].n === 1);

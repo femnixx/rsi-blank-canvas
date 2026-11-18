@@ -8,7 +8,7 @@ function ok(name, cond) { if (cond) { passed++; console.log("PASS", name); } els
 async function main() {
   await initDb();
   // seed minimal
-  await pool.query("DELETE FROM attendance; DELETE FROM registration; DELETE FROM material; DELETE FROM workshop; DELETE FROM admin; DELETE FROM student;");
+  await pool.query("DELETE FROM attendance; DELETE FROM registration; DELETE FROM material; DELETE FROM workshop; DELETE FROM workshop_admin; DELETE FROM student;");
   await pool.query(`INSERT INTO student (nim,full_name,email,study_program,password_hash) VALUES ('2404001','Budi','b@x.com','IF','x'),('2404002','Siti','s@x.com','IF','x')`);
   await pool.query(`INSERT INTO workshop (title,schedule_date,location,quota,status) VALUES ('W1',NOW()+interval '1 day','Lab',10,'OPEN'),('W2',NOW(),'Lab',10,'ONGOING')`);
 
@@ -25,13 +25,13 @@ async function main() {
   // US-SP-03 duplicate blocked
   let dupCode = null;
   try { await RegistrationController.processRegistration('2404001', 1); } catch (e) { dupCode = e.code; }
-  ok("US-SP-03 duplicate DUPLICATE", dupCode === 'DUPLICATE');
+  ok("US-SP-03 duplicate DUPLICATE_REGISTRATION", dupCode === 'DUPLICATE_REGISTRATION');
 
   // US-SP-03 concurrent race -> only one row
   await pool.query("DELETE FROM registration WHERE workshop_id=1 AND nim='2404002'");
   const results = await Promise.allSettled([
-    Registration.saveRegistration('2404002', 1, new Date(), 'REGISTERED'),
-    Registration.saveRegistration('2404002', 1, new Date(), 'REGISTERED'),
+    Registration.saveRegistration('2404002', 1, new Date(), 'CONFIRMED'),
+    Registration.saveRegistration('2404002', 1, new Date(), 'CONFIRMED'),
   ]);
   const rows = await pool.query("SELECT COUNT(*)::int n FROM registration WHERE workshop_id=1 AND nim='2404002'");
   ok("US-SP-03 race single row", rows.rows[0].n === 1);

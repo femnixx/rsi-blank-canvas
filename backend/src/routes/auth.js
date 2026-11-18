@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { validate, validateBody, object, string, email, optional, number } from "../validation.js";
 import { Student } from "../entities/Student.js";
 import { Admin } from "../entities/Admin.js";
 
@@ -14,10 +15,24 @@ function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "7d" });
 }
 
+const loginSchema = object({
+  email: optional(email()),
+  nim: optional(string()),
+  password: string({ required: true, min: 8 }),
+});
+
+const registerSchema = object({
+  nim: string({ required: true }),
+  fullName: string({ required: true }),
+  email: email({ required: true }),
+  studyProgram: string({ required: true }),
+  password: string({ required: true, min: 8 }),
+});
+
 // UC-SP-01: login for Student or Admin (spec tables)
-router.post("/login", async (req, res) => {
-  const { email, nim, password } = req.body;
-  if (!password || (!email && !nim)) return res.status(400).json({ code: "INVALID_NIM", message: "Credentials required" });
+router.post("/login", validateBody(loginSchema), async (req, res) => {
+  const { email, nim, password } = req.validated;
+  if (!email && !nim) return res.status(422).json({ code: "INVALID_NIM", message: "email or nim is required" });
   try {
     if (nim || (email && !String(email).includes("@"))) {
       const n = String(nim || email).trim();
@@ -29,7 +44,7 @@ router.post("/login", async (req, res) => {
         const user = { role: "student", nim: s.rows[0].nim, email: s.rows[0].email, fullName: s.rows[0].full_name, studyProgram: s.rows[0].study_program };
         return res.json({ token: signToken(user), user });
       }
-      const a = await pool.query(`SELECT admin_id, full_name, email, role, password_hash FROM admin WHERE email=$1`, [n]);
+      const a = await pool.query(`SELECT admin_id, full_name, email, role, password_hash FROM workshop_admin WHERE email=$1`, [n]);
       if (a.rows[0]) {
         const ok = await bcrypt.compare(password, a.rows[0].password_hash);
         if (!ok) return res.status(401).json({ code: "FORBIDDEN", message: "Invalid credentials" });
@@ -48,7 +63,7 @@ router.post("/login", async (req, res) => {
       const user = { role: "student", nim: s.rows[0].nim, email: s.rows[0].email, fullName: s.rows[0].full_name, studyProgram: s.rows[0].study_program };
       return res.json({ token: signToken(user), user });
     }
-    const a = await pool.query(`SELECT admin_id, full_name, email, role, password_hash FROM admin WHERE email=$1`, [em]);
+    const a = await pool.query(`SELECT admin_id, full_name, email, role, password_hash FROM workshop_admin WHERE email=$1`, [em]);
     if (a.rows[0]) {
       const ok = await bcrypt.compare(password, a.rows[0].password_hash);
       if (!ok) return res.status(401).json({ code: "FORBIDDEN", message: "Invalid credentials" });
@@ -63,11 +78,8 @@ router.post("/login", async (req, res) => {
 });
 
 // Minimal student registration (keeps domain entity only)
-router.post("/register", async (req, res) => {
-  const { nim, fullName, email, studyProgram, password } = req.body;
-  if (!nim || !fullName || !email || !studyProgram || !password) return res.status(400).json({ code: "INVALID_NIM", message: "All fields required" });
-  if (!isValidEmail(email)) return res.status(400).json({ code: "INVALID_NIM", message: "Invalid email" });
-  if (password.length < 8) return res.status(400).json({ code: "INVALID_NIM", message: "Password too short" });
+router.post("/register", validateBody(registerSchema), async (req, res) => {
+  const { nim, fullName, email, studyProgram, password } = req.validated;
   try {
     const hash = await bcrypt.hash(password, 10);
     const r = await pool.query(

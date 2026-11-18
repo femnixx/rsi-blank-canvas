@@ -76,6 +76,10 @@ export async function requestHistory(nim) {
   return apiFetch(`/api/students/${encodeURIComponent(nim)}/registrations`);
 }
 
+export async function fetchParticipationHistory(nim) {
+  return apiFetch(`/api/students/${encodeURIComponent(nim)}/participation`);
+}
+
 // Legacy helpers (kept for existing UI; map to spec where possible)
 export async function registerParticipant(workshopId, token) {
   // spec path with token-derived NIM not available here; UI should pass NIM.

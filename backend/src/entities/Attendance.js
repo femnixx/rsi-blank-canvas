@@ -3,7 +3,7 @@ import { pool } from "../db.js";
 export const Attendance = {
   async checkExisting(registration_id, db = pool) {
     const r = await db.query(
-      `SELECT attendance_id, registration_id, admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"
+      `SELECT attendance_id, registration_id, verified_by_admin_id AS admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"
        FROM attendance WHERE registration_id = $1`,
       [registration_id]
     );
@@ -12,18 +12,18 @@ export const Attendance = {
 
   async saveAttendance(registration_id, checked_in_at, status, is_verified, db = pool) {
     const r = await db.query(
-      `INSERT INTO attendance (registration_id, admin_id, checked_in_at, status, is_verified)
+      `INSERT INTO attendance (registration_id, verified_by_admin_id, checked_in_at, status, is_verified)
        SELECT $1, NULL, $2, $3, $4
        WHERE EXISTS (SELECT 1 FROM registration WHERE registration_id = $1)
-       RETURNING attendance_id, registration_id, admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"`,
-      [registration_id, checked_in_at || new Date(), status || "present", is_verified ?? false]
+       RETURNING attendance_id, registration_id, verified_by_admin_id AS admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"`,
+      [registration_id, checked_in_at || new Date(), status || "PRESENT", is_verified ?? false]
     );
     return r.rows[0] || null;
   },
 
   async getPresentRecords(workshop_id, db = pool) {
     const r = await db.query(
-      `SELECT a.attendance_id, a.registration_id, a.admin_id, a.checked_in_at AS "checkedInAt",
+      `SELECT a.attendance_id, a.registration_id, a.verified_by_admin_id AS admin_id, a.checked_in_at AS "checkedInAt",
               a.status, a.is_verified AS "isVerified", r.nim, s.full_name AS "fullName"
        FROM attendance a
        JOIN registration r ON r.registration_id = a.registration_id
@@ -54,7 +54,7 @@ export const Attendance = {
   async finalizeRecords(workshop_id, admin_id, is_verified, db = pool) {
     const r = await db.query(
       `UPDATE attendance a
-       SET is_verified = $3, admin_id = $2
+       SET is_verified = $3, verified_by_admin_id = $2
        FROM registration r
        WHERE a.registration_id = r.registration_id AND r.workshop_id = $1
        RETURNING a.attendance_id, a.registration_id, a.is_verified AS "isVerified"`,
@@ -66,7 +66,7 @@ export const Attendance = {
   async findByRegistrations(ids, db = pool) {
     if (!ids?.length) return [];
     const r = await db.query(
-      `SELECT attendance_id, registration_id, admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"
+      `SELECT attendance_id, registration_id, verified_by_admin_id AS admin_id, checked_in_at AS "checkedInAt", status, is_verified AS "isVerified"
        FROM attendance WHERE registration_id = ANY($1::int[])`,
       [ids]
     );

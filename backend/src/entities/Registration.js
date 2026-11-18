@@ -25,9 +25,9 @@ export const Registration = {
   async saveRegistration(nim, workshop_id, registered_at, status, db = pool) {
     const r = await db.query(
       `INSERT INTO registration (nim, workshop_id, registered_at, status)
-       VALUES ($1, $2, $3, $4)
-       RETURNING registration_id, nim, workshop_id, registered_at AS "registeredAt", status`,
-      [nim, workshop_id, registered_at || new Date(), status || "REGISTERED"]
+        VALUES ($1, $2, $3, $4)
+        RETURNING registration_id, nim, workshop_id, registered_at AS "registeredAt", status`,
+      [nim, workshop_id, registered_at || new Date(), status || "CONFIRMED"]
     );
     return r.rows[0];
   },
@@ -35,7 +35,7 @@ export const Registration = {
   async matchRoster(nim, workshop_id, db = pool) {
     const r = await db.query(
       `SELECT registration_id, nim, workshop_id, registered_at AS "registeredAt", status
-       FROM registration WHERE nim = $1 AND workshop_id = $2`,
+       FROM registration WHERE nim = $1 AND workshop_id = $2 AND status = 'CONFIRMED'`,
       [nim, workshop_id]
     );
     return r.rows[0] || null;

@@ -5,6 +5,7 @@ import { requireAdmin } from "../middleware/admin.js";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { validateBody, object, string, number, optional } from "../validation.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
@@ -15,6 +16,30 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => cb(null, Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname)),
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+
+const workshopStatuses = ["DRAFT", "OPEN", "ONGOING", "COMPLETED"];
+
+const workshopCreateSchema = object({
+  title: string({ required: true }),
+  schedule_date: string({ required: true }),
+  location: optional(string()),
+  quota: optional(number()),
+  status: optional(string({ enum: workshopStatuses })),
+});
+
+const workshopUpdateSchema = object({
+  title: optional(string()),
+  schedule_date: optional(string()),
+  location: optional(string()),
+  quota: optional(number()),
+  status: optional(string({ enum: workshopStatuses })),
+});
+
+const materialCreateSchema = object({
+  title: string({ required: true }),
+  access_tier: optional(string({ enum: ["REGISTERED", "VERIFIED_ATTENDEE"] })),
+  asset_type: optional(string()),
+});
 
 // Public/compat reads (spec schema)
 router.get("/", async (_req, res) => {
@@ -33,25 +58,24 @@ router.get("/:id", async (req, res) => {
 });
 
 // Admin workshop CRUD (spec schema)
-router.post("/", requireAuth, requireAdmin, async (req, res) => {
-  const { title, event_date, schedule_date, location, quota, status } = req.body;
-  if (!title || !(event_date || schedule_date)) return res.status(400).json({ code: "INVALID", message: "title and schedule_date required" });
+router.post("/", requireAuth, requireAdmin, validateBody(workshopCreateSchema), async (req, res) => {
+  const { title, schedule_date, location, quota, status } = req.validated;
   try {
     const r = await pool.query(
       `INSERT INTO workshop (title, schedule_date, location, quota, status) VALUES ($1,$2,$3,$4,$5)
        RETURNING workshop_id AS id, workshop_id, title, schedule_date AS event_date, location, quota, status`,
-      [title, event_date || schedule_date, location || "-", Number(quota) || 0, status || "OPEN"]
+      [title, schedule_date, location || "-", Number(quota) || 0, status || "OPEN"]
     );
     res.status(201).json({ workshop: r.rows[0] });
   } catch (err) { sendErr(res, err); }
 });
-router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
-  const { title, event_date, schedule_date, location, quota, status } = req.body;
+router.put("/:id", requireAuth, requireAdmin, validateBody(workshopUpdateSchema), async (req, res) => {
+  const { title, schedule_date, location, quota, status } = req.validated;
   try {
     const r = await pool.query(
       `UPDATE workshop SET title=COALESCE($1,title), schedule_date=COALESCE($2,schedule_date), location=COALESCE($3,location), quota=COALESCE($4,quota), status=COALESCE($5,status)
        WHERE workshop_id=$6 RETURNING workshop_id AS id, workshop_id, title, schedule_date AS event_date, location, quota, status`,
-      [title, event_date || schedule_date, location, quota, status, req.params.id]
+      [title, schedule_date || undefined, location, quota, status, req.params.id]
     );
     if (!r.rows[0]) return res.status(404).json({ code: "NOT_FOUND", message: "Workshop not found" });
     res.json({ workshop: r.rows[0] });
@@ -66,15 +90,16 @@ router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Admin material upload (spec table `material`)
-router.post("/:id/materials", requireAuth, requireAdmin, upload.array("files", 10), async (req, res) => {
+router.post("/:id/materials", requireAuth, requireAdmin, upload.array("files", 10), validateBody(materialCreateSchema), async (req, res) => {
   try {
     const files = req.files || [];
+    const { title, access_tier, asset_type } = req.validated;
     const rows = [];
     for (const f of files) {
       const r = await pool.query(
-        `INSERT INTO material (workshop_id, title, file_url) VALUES ($1,$2,$3)
-         RETURNING material_id AS id, workshop_id, title, file_url, uploaded_at`,
-        [req.params.id, f.originalname, `/uploads/${f.filename}`]
+        `INSERT INTO material (workshop_id, title, file_url, access_tier, asset_type) VALUES ($1,$2,$3,$4,$5)
+         RETURNING material_id AS id, workshop_id, title, file_url, access_tier, asset_type, uploaded_at`,
+        [req.params.id, title, `/uploads/${f.filename}`, access_tier || "REGISTERED", asset_type || null]
       );
       rows.push(r.rows[0]);
     }

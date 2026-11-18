@@ -30,19 +30,19 @@ export const RegistrationController = {
 
     // BR-3: pre-check + DB UNIQUE constraint authoritative
     const dup = await Registration.checkDuplicate(n, workshop_id);
-    if (dup) throwError("DUPLICATE");
+    if (dup) throwError("DUPLICATE_REGISTRATION");
 
     // BR-8 [PROPOSED]: quota off by default
     if (process.env.ENFORCE_QUOTA === "true" && workshop.quota > 0) {
       const c = await pool.query(`SELECT COUNT(*)::int AS n FROM registration WHERE workshop_id=$1`, [workshop_id]);
-      if (c.rows[0].n >= workshop.quota) throwError("FORBIDDEN", "Quota exceeded");
+      if (c.rows[0].n >= workshop.quota) throwError("QUOTA_FULL", "Quota full");
     }
 
     try {
-      const reg = await Registration.saveRegistration(n, workshop_id, new Date(), "REGISTERED");
+      const reg = await Registration.saveRegistration(n, workshop_id, new Date(), "CONFIRMED");
       return { registration: reg, message: "Registration confirmed" };
     } catch (err) {
-      if (err.code === "23505") throwError("DUPLICATE"); // concurrent race
+      if (err.code === "23505") throwError("DUPLICATE_REGISTRATION"); // concurrent race
       throw err;
     }
   },
