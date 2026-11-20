@@ -32,8 +32,10 @@ router.post("/:id/registrations", optionalAuth, validateBody(registrationSubmitS
   const { nim } = req.validated;
   const workshop_id = Number(req.params.id);
   if (!Number.isFinite(workshop_id)) return res.status(422).json({ code: "INVALID_NIM", message: "workshop_id must be a number" });
-  const data = await RegistrationController.processRegistration(nim, workshop_id, req.body);
-  res.status(201).json(data);
+  try {
+    const data = await RegistrationController.processRegistration(nim, workshop_id, req.body);
+    res.status(201).json(data);
+  } catch (err) { sendErr(res, err); }
 });
 
 // Spec §16: requestHistory

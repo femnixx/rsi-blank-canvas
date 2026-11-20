@@ -173,10 +173,10 @@ export default function MyWorkshops() {
                         {!isRegistered ? (
                           <button
                             onClick={() => handleRegister(w.id)}
-                            disabled={registeringId === w.id}
-                            className="btn-primary disabled:opacity-50"
+                            disabled={isRegistered || registeringId === w.id}
+                            className={`btn-primary disabled:opacity-50 ${isRegistered ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
-                            {registeringId === w.id ? "Registering…" : "Register"}
+                            {isRegistered ? "Already registered" : registeringId === w.id ? "Registering…" : "Register"}
                           </button>
                         ) : (
                           <span className="inline-flex items-center rounded-full bg-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue">

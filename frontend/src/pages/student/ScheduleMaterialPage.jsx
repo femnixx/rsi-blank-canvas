@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMaterialsByNim } from "../../lib/api.js";
 
 export default function ScheduleMaterialPage() {
   const { workshopId } = useParams();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(!workshopId || !user?.nim);
   const [error, setError] = useState("");
   const [data, setData] = useState({ workshop: null, materials: [], verified: false });
 
@@ -26,8 +27,58 @@ export default function ScheduleMaterialPage() {
     load();
   }, [workshopId, user?.nim]);
 
+  // No workshop selected (bare /schedule route) — show empty state with browse button
+  if (!workshopId) {
+    return (
+      <div className="min-h-screen p-6 animate-fade-in flex flex-col items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-blue/10 mb-4">
+            <svg className="h-8 w-8 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v1m-6 0a2 2 0 002-2h2a2 2 0 002 2v1m-6 0a2 2 0 012-2h2a2 2 0 012 2v1m-6 0a2 2 0 002-2h2a2 2 0 002 2v1m-6 0a2 2 0 012-2h2a2 2 0 012 2v1" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">No materials available</h2>
+          <p className="text-sm text-brand-muted mb-6">
+            Select a workshop from Browse Workshops to view its schedule and materials.
+          </p>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="btn-primary w-full sm:w-auto"
+          >
+            Browse Workshops
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <div className="p-6 text-brand-muted">Loading schedule and materials…</div>;
-  if (!data.workshop) return <div className="p-6 text-brand-muted">Workshop not found.</div>;
+  if (!data.workshop && !error) return <div className="p-6 text-brand-muted">Workshop not found.</div>;
+
+  // Not enrolled in this workshop — show empty state with browse button
+  if (error && data.materials.length === 0 && !data.workshop) {
+    return (
+      <div className="min-h-screen p-6 animate-fade-in flex flex-col items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-blue/10 mb-4">
+            <svg className="h-8 w-8 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v1m-6 0a2 2 0 002-2h2a2 2 0 002 2v1m-6 0a2 2 0 012-2h2a2 2 0 012 2v1m-6 0a2 2 0 002-2h2a2 2 0 002 2v1m-6 0a2 2 0 012-2h2a2 2 0 012 2v1" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">No schedules &amp; materials found</h2>
+          <p className="text-sm text-brand-muted mb-6">
+            You are not registered for this workshop. Register first to view its schedule and materials.
+          </p>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="btn-primary w-full sm:w-auto"
+          >
+            Browse Workshops
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const { workshop, materials, verified } = data;
 

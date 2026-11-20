@@ -90,15 +90,22 @@ async function seed() {
       );
     }
 
-    // Materials: one REGISTERED tier and one VERIFIED_ATTENDEE tier with asset_type
-    await client.query(
-      `INSERT INTO material (workshop_id, title, file_url, asset_type, access_tier, uploaded_at)
-       VALUES ($1,$2,$3,$4,'REGISTERED',NOW()),($1,$5,$6,$7,'VERIFIED_ATTENDEE',NOW())`,
-      [wids[0], "React Slides", "/uploads/react-slides.pdf", "slides", "Code Samples", "/uploads/react-code.zip", "code"]
-    );
+    // Materials: one REGISTERED tier and one VERIFIED_ATTENDEE tier per workshop
+    const materialData = [
+      [wids[0], "React Slides", "/uploads/react-slides.pdf", "slides", "React Code Samples", "/uploads/react-code.zip", "code"],
+      [wids[1], "ML Lecture Notes", "/uploads/ml-notes.pdf", "slides", "ML Assignment", "/uploads/ml-assignment.zip", "code"],
+      [wids[2], "Cybersecurity Slides", "/uploads/cyber-slides.pdf", "slides", "Security Lab Guide", "/uploads/security-lab.pdf", "document"],
+    ];
+    for (const [wid, t1, f1, a1, t2, f2, a2] of materialData) {
+      await client.query(
+        `INSERT INTO material (workshop_id, title, file_url, asset_type, access_tier, uploaded_at)
+         VALUES ($1,$2,$3,$4,'REGISTERED',NOW()),($1,$5,$6,$7,'VERIFIED_ATTENDEE',NOW())`,
+        [wid, t1, f1, a1, t2, f2, a2]
+      );
+    }
 
     await client.query("COMMIT");
-    console.log(`Seeded spec data: 1 workshop_admin, 5 students, 3 workshops, ${regs.length} registrations, ${regs.length > 0 ? 2 : 0} attendance, 2 materials`);
+    console.log(`Seeded spec data: 1 workshop_admin, 5 students, 3 workshops, ${regs.length} registrations, ${regs.length > 0 ? 2 : 0} attendance, ${materialData.length * 2} materials`);
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;

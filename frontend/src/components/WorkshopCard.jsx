@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export default function WorkshopCard({ workshop, onRegister, isAdmin, onDelete, deletingId }) {
+export default function WorkshopCard({ workshop, onRegister, isAdmin, onDelete, deletingId, isRegistered }) {
   const eventDate = workshop.event_date ? new Date(workshop.event_date) : null;
   const dateStr = eventDate
     ? eventDate.toLocaleDateString("en-US", {
@@ -76,9 +76,10 @@ export default function WorkshopCard({ workshop, onRegister, isAdmin, onDelete, 
           {!isAdmin && onRegister && (
             <button
               onClick={() => onRegister(workshop)}
-              className="btn-primary !py-1.5 !text-xs"
+              disabled={isRegistered}
+              className={`btn-primary !py-1.5 !text-xs ${isRegistered ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              Register
+              {isRegistered ? "Already registered" : "Register"}
             </button>
           )}
           <Link

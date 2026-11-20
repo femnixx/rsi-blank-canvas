@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { fetchWorkshops, deleteWorkshop } from "../lib/api.js";
+import { fetchWorkshops, deleteWorkshop, fetchMyWorkshops } from "../lib/api.js";
 import WorkshopCard from "../components/WorkshopCard.jsx";
 import WorkshopRegistrationModal from "../components/WorkshopRegistrationModal.jsx";
 
 export default function Workshops() {
-  const { isAuthenticated, token, isAdmin, loading: authLoading } = useAuth();
+  const { isAuthenticated, token, isAdmin, loading: authLoading, user } = useAuth();
   const navigate = useNavigate();
   const [workshops, setWorkshops] = useState(null);
+  const [registeredIds, setRegisteredIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
@@ -18,7 +19,8 @@ export default function Workshops() {
 
   useEffect(() => {
     loadWorkshops();
-  }, []);
+    if (isAuthenticated && user?.nim) loadRegistrations();
+  }, [isAuthenticated, user?.nim]);
 
   async function loadWorkshops() {
     setLoading(true);
@@ -30,6 +32,16 @@ export default function Workshops() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadRegistrations() {
+    try {
+      const data = await fetchMyWorkshops(token);
+      const ids = new Set((data.workshops || []).map((w) => w.id));
+      setRegisteredIds(ids);
+    } catch (err) {
+      // registrations endpoint may not be available for all roles; ignore
     }
   }
 
@@ -129,6 +141,7 @@ export default function Workshops() {
                   isAdmin={isAdmin}
                   onDelete={handleDelete}
                   deletingId={deletingId}
+                  isRegistered={registeredIds.has(w.id)}
                 />
               </div>
             ))}

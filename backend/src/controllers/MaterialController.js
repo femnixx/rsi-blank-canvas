@@ -13,7 +13,7 @@ export const MaterialController = {
     const w = await Workshop.getWorkshop(workshop_id);
     if (!w) throwError("NOT_FOUND", "Workshop not found");
     const reg = await Registration.matchRoster(String(nim || "").trim(), workshop_id);
-    if (!reg) throwError("NOT_REGISTERED");
+    if (!reg) throwError("FORBIDDEN", "Not enrolled in this workshop");
     const materials = await Material.findByWorkshop(workshop_id);
     const att = await Attendance.checkExisting(reg.registration_id);
     const verified = att ? att.isVerified === true : false;

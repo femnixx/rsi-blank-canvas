@@ -7,7 +7,6 @@ import {
   registerParticipantByNim,
   markAttendanceByNim,
 } from "../lib/api.js";
-import WorkshopRegistrationModal from "../components/WorkshopRegistrationModal.jsx";
 
 export default function WorkshopDetail() {
   const { id } = useParams();
@@ -355,7 +354,6 @@ export default function WorkshopDetail() {
                     Mark Attendance
                   </Link>
                 )}
-                <button onClick={() => setModalOpen(true)} className="btn-ghost">Register for this Workshop</button>
               </div>
             </div>
           )}
@@ -413,14 +411,6 @@ export default function WorkshopDetail() {
               {materialsError}
             </div>
           )}
-
-          <WorkshopRegistrationModal
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            workshop={workshop}
-            token={token}
-            onRegistered={handleRegistered}
-          />
         </div>
       </div>
     </div>

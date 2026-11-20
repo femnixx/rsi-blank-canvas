@@ -3,14 +3,15 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { MaterialController } from "../controllers/MaterialController.js";
 import { ParticipationController } from "../controllers/ParticipationController.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sendErr = (res, err) => res.status(err.status || 500).json({ code: err.code || "INTERNAL", message: err.message });
 
-// Spec §16: getScheduleAndMaterials (NIM-gated)
-router.get("/workshops/:id/materials", async (req, res) => {
-  try { res.json(await MaterialController.getScheduleAndMaterials(req.query.nim, req.params.id)); }
+// Spec §16: getScheduleAndMaterials (NIM-gated, requires auth)
+router.get("/workshops/:id/materials", requireAuth, async (req, res) => {
+  try { res.json(await MaterialController.getScheduleAndMaterials(req.user.nim, req.params.id)); }
   catch (err) { sendErr(res, err); }
 });
 // Compat

@@ -18,7 +18,7 @@ async function main(){
   ok("US-SP-05 registered access", m.materials.length === 1 && m.materials[0].accessible === true);
   // unregistered blocked
   let c; try { await MaterialController.getScheduleAndMaterials('999', wid); } catch(e){ c=e.code; }
-  ok("US-SP-05 NOT_REGISTERED", c === 'NOT_REGISTERED');
+  ok("US-SP-05 FORBIDDEN", c === 'FORBIDDEN');
 
   // US-SP-07 participation history derived
   await pool.query(`INSERT INTO attendance (registration_id,status,is_verified) SELECT registration_id,'PRESENT',true FROM registration WHERE nim='2404001'`);

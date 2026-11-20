@@ -221,6 +221,14 @@ function AppRoutes() {
           </StudentRoute>
         }
       />
+      <Route
+        path="/schedule"
+        element={
+          <StudentRoute>
+            <ScheduleMaterialPage />
+          </StudentRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
